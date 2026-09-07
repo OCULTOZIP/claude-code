@@ -1,0 +1,61 @@
+{
+  "confirmation_template": "Vou mover {n} arquivo(s) para '{destination_dir}'. Os arquivos deixam de existir no local atual.",
+  "description": "Move arquivos de um lugar para outro dentro da area concedida. Nao copia: o original deixa de existir na origem.",
+  "errors": {
+    "DESTINATION_NOT_DIR": "O destino nao e uma pasta.",
+    "OUTSIDE_GRANT": "Origem ou destino fora da area concedida.",
+    "PARTIAL_FAILURE": "Parte moveu e parte nao; as duas listas sao devolvidas.",
+    "SOURCE_GONE": "Arquivo nao existe mais; refaca a busca."
+  },
+  "expected_result": {
+    "destination_listing_after": "array<string>",
+    "moved": "array<string>",
+    "skipped": "array<{path, reason}>"
+  },
+  "log_params": [
+    "destination_dir",
+    "on_conflict"
+  ],
+  "name": "files.move",
+  "os_permissions": [
+    "WORKSPACE_GRANT"
+  ],
+  "parameters": {
+    "additionalProperties": false,
+    "properties": {
+      "destination_dir": {
+        "description": "Pasta de destino, relativa a raiz concedida.",
+        "type": "string"
+      },
+      "on_conflict": {
+        "default": "rename",
+        "description": "O que fazer se ja existir arquivo de mesmo nome.",
+        "enum": [
+          "rename",
+          "skip",
+          "fail"
+        ],
+        "type": "string"
+      },
+      "sources": {
+        "description": "Caminhos vindos de files.search ou files.list.",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 500,
+        "type": "array"
+      }
+    },
+    "required": [
+      "sources",
+      "destination_dir"
+    ],
+    "type": "object"
+  },
+  "rate_limit_per_hour": 20,
+  "requires_confirmation": true,
+  "risk_level": 2,
+  "runs_on": "device",
+  "verification": "Relistar a pasta de destino e confirmar cada item movido.",
+  "version": 1
+}

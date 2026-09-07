@@ -1,0 +1,44 @@
+{
+  "description": "Lista arquivos e pastas de um diretorio dentro da area concedida.",
+  "errors": {
+    "NOT_A_DIRECTORY": "O caminho nao e um diretorio.",
+    "NOT_FOUND": "Caminho inexistente.",
+    "OUTSIDE_GRANT": "Caminho fora da area concedida."
+  },
+  "expected_result": {
+    "entries": "array<{path, kind, size, modified}>",
+    "path": "string"
+  },
+  "log_params": [
+    "path",
+    "max_results"
+  ],
+  "name": "files.list",
+  "os_permissions": [
+    "WORKSPACE_GRANT"
+  ],
+  "parameters": {
+    "additionalProperties": false,
+    "properties": {
+      "max_results": {
+        "default": 200,
+        "description": "Maximo de itens.",
+        "maximum": 500,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "path": {
+        "description": "Caminho relativo a raiz concedida. Omita para a raiz.",
+        "type": "string"
+      }
+    },
+    "required": [],
+    "type": "object"
+  },
+  "rate_limit_per_hour": 120,
+  "requires_confirmation": false,
+  "risk_level": 1,
+  "runs_on": "device",
+  "verification": "Nenhuma; leitura.",
+  "version": 1
+}

@@ -1,0 +1,45 @@
+{
+  "description": "Cria um lembrete com horario. Obtenha a data atual com clock.now antes de calcular horarios relativos.",
+  "errors": {
+    "BAD_TIMESTAMP": "when nao e uma data ISO valida.",
+    "IN_THE_PAST": "O horario informado ja passou."
+  },
+  "expected_result": {
+    "id": "string",
+    "title": "string",
+    "when": "string"
+  },
+  "log_params": [
+    "when"
+  ],
+  "name": "reminders.create",
+  "os_permissions": [],
+  "parameters": {
+    "additionalProperties": false,
+    "properties": {
+      "notes": {
+        "description": "Detalhe opcional.",
+        "type": "string"
+      },
+      "title": {
+        "description": "Do que o usuario deve ser lembrado.",
+        "type": "string"
+      },
+      "when": {
+        "description": "Data e hora ISO-8601, ex: 2026-09-08T08:00:00.",
+        "type": "string"
+      }
+    },
+    "required": [
+      "title",
+      "when"
+    ],
+    "type": "object"
+  },
+  "rate_limit_per_hour": 120,
+  "requires_confirmation": false,
+  "risk_level": 1,
+  "runs_on": "device",
+  "verification": "Reler o lembrete gravado pelo id.",
+  "version": 1
+}

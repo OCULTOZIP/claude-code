@@ -1,0 +1,37 @@
+{
+  "description": "Abre um arquivo da area concedida ou uma URL no aplicativo padrao do sistema. Depende do sistema operacional ter um handler configurado.",
+  "errors": {
+    "BLOCKED_SCHEME": "Somente http, https e arquivos da area concedida sao aceitos.",
+    "NO_HANDLER": "O sistema nao tem um abridor configurado (xdg-open, open ou start).",
+    "OUTSIDE_GRANT": "Caminho fora da area concedida."
+  },
+  "expected_result": {
+    "handler": "string",
+    "opened": "boolean",
+    "target": "string"
+  },
+  "log_params": [
+    "target"
+  ],
+  "name": "system.open",
+  "os_permissions": [],
+  "parameters": {
+    "additionalProperties": false,
+    "properties": {
+      "target": {
+        "description": "Caminho relativo a raiz concedida, ou URL http/https.",
+        "type": "string"
+      }
+    },
+    "required": [
+      "target"
+    ],
+    "type": "object"
+  },
+  "rate_limit_per_hour": 120,
+  "requires_confirmation": false,
+  "risk_level": 1,
+  "runs_on": "device",
+  "verification": "Conferir o codigo de saida do handler do sistema.",
+  "version": 1
+}

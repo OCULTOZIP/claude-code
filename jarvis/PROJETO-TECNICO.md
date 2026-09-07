@@ -1,6 +1,11 @@
 # JARVIS — Projeto Técnico
 
-**Versão** 1.0 · **Data** 2026-09-07 · **Status** aguardando aprovação para implementação
+**Versão** 1.1 · **Data** 2026-09-07 · **Status** aprovado; espinha vertical implementada
+
+> A implementação local que já roda está em [`README.md`](README.md). Ela cobre o loop do
+> agente, o Tool Gateway, a política de risco, a confirmação vinculada e catorze
+> ferramentas, com o computador no papel do aparelho. O aplicativo Android continua sendo
+> a fase 1 do roadmap.
 
 Assistente pessoal de IA com capacidade de agente: entende linguagem natural por voz ou
 texto, planeja tarefas em etapas, escolhe ferramentas, executa, verifica o resultado e
@@ -451,7 +456,7 @@ concedida. Elimina travessia de caminho por construção, não por filtro.
 | `web.fetch_page` | servidor | 0 | não | — |
 | `time.now` | servidor | 0 | não | — |
 | `memory.recall` | servidor | 0 | não | — |
-| `memory.save` | servidor | 1 | não | — |
+| `memory.save` | servidor | 1 | sim | — |
 | `memory.forget` | servidor | 2 | sim | — |
 | `apps.list_launchable` | dispositivo | 1 | não | `<queries>` no manifesto |
 | `apps.open` | dispositivo | 1 | não | — |
@@ -469,6 +474,10 @@ concedida. Elimina travessia de caminho por construção, não por filtro.
 | `calendar.delete_event` | dispositivo | 3 | sempre | `WRITE_CALENDAR` |
 | `reminders.create` | dispositivo | 1 | não | `SCHEDULE_EXACT_ALARM` |
 | `reminders.list` | dispositivo | 1 | não | — |
+
+`memory.save` é nível 1 mas pede confirmação assim mesmo, porque a seção 7.4 exige que o
+texto exato a ser guardado apareça antes da gravação. É o único caso em que a confirmação
+não vem do nível de risco.
 
 Vinte e duas ferramentas. É deliberadamente pequeno. Um catálogo grande piora a escolha do
 modelo e multiplica a superfície de teste. As demais entram por fase, conforme a seção 14.
@@ -1616,19 +1625,26 @@ uma dessas coisas é trabalho real depois que a espinha existe, e desperdício a
 
 ---
 
-## Aguardando aprovação
+## Estado atual
 
-O projeto técnico está completo. Nada foi implementado.
+O projeto técnico está completo e a primeira fase de implementação começou.
 
-**Três pontos onde a sua decisão muda o plano:**
+**Rodando agora, na máquina local:** o loop do agente, o Tool Gateway com as sete etapas,
+o motor de política com escalonamento de risco, a confirmação assinada e vinculada aos
+parâmetros, catorze ferramentas reais, memória com filtro de sensibilidade, trilha de
+auditoria com redação e uma interface de voz no navegador. Quarenta e nove testes cobrem
+tudo que não depende do modelo. As instruções estão no [`README.md`](README.md).
 
-1. **Distribuição.** Sideload no seu aparelho, ou Play Store? Sideload libera SMS direto,
-   listagem completa de apps e leitura de notificações sem justificar política, e não custa
-   os $25 da conta de desenvolvedor. Recomendo sideload para o MVP.
-2. **Linguagem do backend.** Python com FastAPI, como está no documento, ou TypeScript com
-   NestJS? A troca não altera nenhuma outra decisão aqui.
-3. **iOS.** Fase 4 como planejado, ou você quer antes? Se quiser antes, o conjunto de
-   ferramentas do MVP encolhe e a proposta muda.
+**Ainda não construído:** o aplicativo Android, a wake word, as notificações, o calendário
+do sistema, os contatos, a câmera, a localização, as automações agendadas, o multimodal e
+o iOS. Cada um tem fase definida na seção 14.
 
-Com o "pode começar", o passo seguinte é o Dia 1 da seção 20: o esquema de
-`files.create_dir` e a geração de código a partir dele.
+**Duas decisões continuam abertas** e nenhuma bloqueia o trabalho atual:
+
+1. **Distribuição do app Android.** Sideload no seu aparelho, ou Play Store? Sideload
+   libera SMS direto, listagem completa de apps e leitura de notificações sem justificar
+   política, e não custa os $25 da conta de desenvolvedor. Recomendo sideload para o MVP.
+2. **iOS.** Fase 4 como planejado, ou antes? Se antes, o conjunto de ferramentas do MVP
+   encolhe e a proposta muda.
+
+O backend ficou em Python com FastAPI, como estava no documento.

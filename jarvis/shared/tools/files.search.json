@@ -1,0 +1,61 @@
+{
+  "description": "Procura arquivos na area concedida por nome, extensao e data de modificacao. Devolve os caminhos que as demais ferramentas de arquivo aceitam.",
+  "errors": {
+    "BAD_TIMESTAMP": "modified_since nao e uma data ISO valida.",
+    "OUTSIDE_GRANT": "Caminho fora da area concedida."
+  },
+  "expected_result": {
+    "matches": "array<{path, size, modified}>",
+    "truncated": "boolean"
+  },
+  "log_params": [
+    "query",
+    "extensions",
+    "modified_since",
+    "path"
+  ],
+  "name": "files.search",
+  "os_permissions": [
+    "WORKSPACE_GRANT"
+  ],
+  "parameters": {
+    "additionalProperties": false,
+    "properties": {
+      "extensions": {
+        "description": "Extensoes sem ponto, ex: ['mp4','mov'].",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 30,
+        "type": "array"
+      },
+      "max_results": {
+        "default": 200,
+        "description": "Maximo de resultados.",
+        "maximum": 500,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "modified_since": {
+        "description": "ISO-8601. Ex: 2026-09-07T00:00:00 para 'hoje'. Obtenha a data com clock.now.",
+        "type": "string"
+      },
+      "path": {
+        "description": "Subpasta onde procurar. Omita para a raiz concedida.",
+        "type": "string"
+      },
+      "query": {
+        "description": "Trecho do nome do arquivo. Omita para nao filtrar por nome.",
+        "type": "string"
+      }
+    },
+    "required": [],
+    "type": "object"
+  },
+  "rate_limit_per_hour": 120,
+  "requires_confirmation": false,
+  "risk_level": 1,
+  "runs_on": "device",
+  "verification": "Nenhuma; leitura.",
+  "version": 1
+}

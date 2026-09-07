@@ -1,0 +1,33 @@
+{
+  "description": "Data e hora atuais. Use sempre esta ferramenta antes de interpretar 'hoje', 'amanha' ou qualquer referencia temporal relativa; nunca presuma a data.",
+  "errors": {
+    "UNKNOWN_TIMEZONE": "Fuso desconhecido; use o fuso local."
+  },
+  "expected_result": {
+    "iso": "string",
+    "timezone": "string",
+    "weekday": "string"
+  },
+  "log_params": [
+    "timezone"
+  ],
+  "name": "clock.now",
+  "os_permissions": [],
+  "parameters": {
+    "additionalProperties": false,
+    "properties": {
+      "timezone": {
+        "description": "Fuso IANA, ex: America/Sao_Paulo. Omita para usar o fuso local do sistema.",
+        "type": "string"
+      }
+    },
+    "required": [],
+    "type": "object"
+  },
+  "rate_limit_per_hour": 120,
+  "requires_confirmation": false,
+  "risk_level": 0,
+  "runs_on": "server",
+  "verification": "Nenhuma; leitura de relogio.",
+  "version": 1
+}

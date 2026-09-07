@@ -1,0 +1,39 @@
+{
+  "confirmation_template": "Vou apagar {n} item(ns) da memoria. Isso nao pode ser desfeito.",
+  "description": "Apaga itens da memoria. Chame memory.recall antes para saber exatamente o que sera apagado.",
+  "errors": {
+    "NOT_FOUND": "Nenhum id corresponde."
+  },
+  "expected_result": {
+    "deleted": "array<string>",
+    "missing": "array<string>"
+  },
+  "log_params": [
+    "ids"
+  ],
+  "name": "memory.forget",
+  "os_permissions": [],
+  "parameters": {
+    "additionalProperties": false,
+    "properties": {
+      "ids": {
+        "description": "Ids vindos de memory.recall. Caminhos ou chaves inventadas nao sao aceitos.",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 100,
+        "type": "array"
+      }
+    },
+    "required": [
+      "ids"
+    ],
+    "type": "object"
+  },
+  "rate_limit_per_hour": 120,
+  "requires_confirmation": true,
+  "risk_level": 2,
+  "runs_on": "server",
+  "verification": "Reconsultar os ids e confirmar ausencia.",
+  "version": 1
+}

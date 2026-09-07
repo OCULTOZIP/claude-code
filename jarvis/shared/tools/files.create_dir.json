@@ -1,0 +1,39 @@
+{
+  "description": "Cria uma pasta na area concedida, incluindo pastas intermediarias.",
+  "errors": {
+    "ALREADY_EXISTS": "A pasta ja existe.",
+    "OUTSIDE_GRANT": "Caminho fora da area concedida.",
+    "WRITE_FAILED": "Falha ao criar."
+  },
+  "expected_result": {
+    "created": "boolean",
+    "parent_listing_after": "array<string>",
+    "path": "string"
+  },
+  "log_params": [
+    "path"
+  ],
+  "name": "files.create_dir",
+  "os_permissions": [
+    "WORKSPACE_GRANT"
+  ],
+  "parameters": {
+    "additionalProperties": false,
+    "properties": {
+      "path": {
+        "description": "Caminho relativo a raiz concedida.",
+        "type": "string"
+      }
+    },
+    "required": [
+      "path"
+    ],
+    "type": "object"
+  },
+  "rate_limit_per_hour": 120,
+  "requires_confirmation": false,
+  "risk_level": 1,
+  "runs_on": "device",
+  "verification": "Relistar a pasta-mae e confirmar a presenca do novo diretorio.",
+  "version": 1
+}

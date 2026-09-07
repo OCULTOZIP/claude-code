@@ -1,0 +1,30 @@
+{
+  "description": "Lista os lembretes pendentes do usuario.",
+  "errors": {},
+  "expected_result": {
+    "reminders": "array<{id, title, when, notes, done}>"
+  },
+  "log_params": [
+    "include_done"
+  ],
+  "name": "reminders.list",
+  "os_permissions": [],
+  "parameters": {
+    "additionalProperties": false,
+    "properties": {
+      "include_done": {
+        "default": false,
+        "description": "Incluir lembretes ja disparados.",
+        "type": "boolean"
+      }
+    },
+    "required": [],
+    "type": "object"
+  },
+  "rate_limit_per_hour": 120,
+  "requires_confirmation": false,
+  "risk_level": 1,
+  "runs_on": "device",
+  "verification": "Nenhuma; leitura.",
+  "version": 1
+}

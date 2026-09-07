@@ -1,0 +1,41 @@
+{
+  "confirmation_template": "Vou enviar {n} arquivo(s) para a lixeira. Ficam recuperaveis por 7 dias em .jarvis-lixeira.",
+  "description": "Envia arquivos para a lixeira do JARVIS dentro da area concedida. Nao apaga em definitivo.",
+  "errors": {
+    "NOT_FOUND": "Arquivo inexistente.",
+    "OUTSIDE_GRANT": "Caminho fora da area concedida.",
+    "TRASH_FAILED": "Falha ao mover para a lixeira."
+  },
+  "expected_result": {
+    "skipped": "array<{path, reason}>",
+    "trashed": "array<{original, trash_path}>"
+  },
+  "log_params": [],
+  "name": "files.delete",
+  "os_permissions": [
+    "WORKSPACE_GRANT"
+  ],
+  "parameters": {
+    "additionalProperties": false,
+    "properties": {
+      "paths": {
+        "description": "Caminhos vindos de files.search ou files.list.",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 200,
+        "type": "array"
+      }
+    },
+    "required": [
+      "paths"
+    ],
+    "type": "object"
+  },
+  "rate_limit_per_hour": 10,
+  "requires_confirmation": true,
+  "risk_level": 3,
+  "runs_on": "device",
+  "verification": "Confirmar ausencia na origem e presenca na lixeira.",
+  "version": 1
+}

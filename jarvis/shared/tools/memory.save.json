@@ -1,0 +1,53 @@
+{
+  "confirmation_template": "Vou guardar na memoria ({layer}) sob '{key}':\n\n{content}",
+  "description": "Grava um item na memoria de longo prazo. So use quando o usuario pedir explicitamente para lembrar de algo.",
+  "errors": {
+    "DUPLICATE": "Ja existe item identico nessa camada.",
+    "SENSITIVE_CONTENT": "Parece credencial ou dado sensivel; gravacao recusada."
+  },
+  "expected_result": {
+    "id": "string",
+    "layer": "string"
+  },
+  "log_params": [
+    "layer",
+    "key"
+  ],
+  "name": "memory.save",
+  "os_permissions": [],
+  "parameters": {
+    "additionalProperties": false,
+    "properties": {
+      "content": {
+        "description": "Texto exato a guardar.",
+        "type": "string"
+      },
+      "key": {
+        "description": "Rotulo curto para localizar depois.",
+        "type": "string"
+      },
+      "layer": {
+        "description": "Camada da memoria.",
+        "enum": [
+          "preferencia",
+          "projeto",
+          "tarefa",
+          "contexto"
+        ],
+        "type": "string"
+      }
+    },
+    "required": [
+      "layer",
+      "key",
+      "content"
+    ],
+    "type": "object"
+  },
+  "rate_limit_per_hour": 120,
+  "requires_confirmation": true,
+  "risk_level": 1,
+  "runs_on": "server",
+  "verification": "Reler o item gravado pelo id.",
+  "version": 1
+}

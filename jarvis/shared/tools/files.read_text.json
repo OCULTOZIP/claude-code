@@ -1,0 +1,46 @@
+{
+  "description": "Le o conteudo de um arquivo de texto na area concedida.",
+  "errors": {
+    "NOT_FOUND": "Arquivo inexistente.",
+    "NOT_TEXT": "Arquivo nao e texto legivel.",
+    "OUTSIDE_GRANT": "Caminho fora da area concedida."
+  },
+  "expected_result": {
+    "content": "string",
+    "path": "string",
+    "truncated": "boolean"
+  },
+  "log_params": [
+    "path"
+  ],
+  "name": "files.read_text",
+  "os_permissions": [
+    "WORKSPACE_GRANT"
+  ],
+  "parameters": {
+    "additionalProperties": false,
+    "properties": {
+      "max_bytes": {
+        "default": 40000,
+        "description": "Limite de leitura.",
+        "maximum": 200000,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "path": {
+        "description": "Caminho vindo de files.list ou files.search.",
+        "type": "string"
+      }
+    },
+    "required": [
+      "path"
+    ],
+    "type": "object"
+  },
+  "rate_limit_per_hour": 120,
+  "requires_confirmation": false,
+  "risk_level": 1,
+  "runs_on": "device",
+  "verification": "Nenhuma; leitura.",
+  "version": 1
+}

@@ -1,0 +1,49 @@
+{
+  "description": "Cria um arquivo de texto na area concedida. Nao sobrescreve por padrao.",
+  "errors": {
+    "ALREADY_EXISTS": "Arquivo ja existe; use overwrite se for intencional.",
+    "OUTSIDE_GRANT": "Caminho fora da area concedida.",
+    "WRITE_FAILED": "Falha de escrita."
+  },
+  "expected_result": {
+    "bytes": "integer",
+    "path": "string"
+  },
+  "log_params": [
+    "path",
+    "overwrite"
+  ],
+  "name": "files.create",
+  "os_permissions": [
+    "WORKSPACE_GRANT"
+  ],
+  "parameters": {
+    "additionalProperties": false,
+    "properties": {
+      "content": {
+        "description": "Conteudo do arquivo.",
+        "type": "string"
+      },
+      "overwrite": {
+        "default": false,
+        "description": "Sobrescrever se ja existir.",
+        "type": "boolean"
+      },
+      "path": {
+        "description": "Caminho relativo a raiz concedida.",
+        "type": "string"
+      }
+    },
+    "required": [
+      "path",
+      "content"
+    ],
+    "type": "object"
+  },
+  "rate_limit_per_hour": 120,
+  "requires_confirmation": false,
+  "risk_level": 1,
+  "runs_on": "device",
+  "verification": "Reler o arquivo e conferir o tamanho.",
+  "version": 1
+}

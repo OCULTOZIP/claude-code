@@ -1,0 +1,39 @@
+{
+  "description": "Busca na memoria de longo prazo do usuario por assunto. Use antes de afirmar que nao sabe algo sobre o usuario.",
+  "errors": {},
+  "expected_result": {
+    "items": "array<{id, layer, key, content, created_at}>"
+  },
+  "log_params": [
+    "query",
+    "limit"
+  ],
+  "name": "memory.recall",
+  "os_permissions": [],
+  "parameters": {
+    "additionalProperties": false,
+    "properties": {
+      "limit": {
+        "default": 8,
+        "description": "Maximo de itens.",
+        "maximum": 20,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "query": {
+        "description": "Assunto a procurar.",
+        "type": "string"
+      }
+    },
+    "required": [
+      "query"
+    ],
+    "type": "object"
+  },
+  "rate_limit_per_hour": 120,
+  "requires_confirmation": false,
+  "risk_level": 0,
+  "runs_on": "server",
+  "verification": "Nenhuma; leitura.",
+  "version": 1
+}
