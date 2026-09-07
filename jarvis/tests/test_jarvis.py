@@ -6,6 +6,7 @@ da area concedida, filtro de sensibilidade e o verificador de honestidade.
 from __future__ import annotations
 
 import asyncio
+import re
 import sys
 import tempfile
 import time
@@ -387,6 +388,78 @@ class TestSistema(unittest.TestCase):
         r = run(self.rt.gateway.execute("system.open", {"target": "javascript:alert(1)"},
                                         TurnState()))
         self.assertEqual(r["error_code"], "BLOCKED_SCHEME")
+
+
+class TestAcessoPelaRede(unittest.TestCase):
+    """Token de acesso, exigido quando o servidor escuta fora do loopback."""
+
+    def test_loopback_nao_e_publico(self):
+        for host in ("127.0.0.1", "localhost", "::1"):
+            self.assertFalse(Config(host=host).host_is_public, host)
+
+    def test_endereco_de_rede_e_publico(self):
+        for host in ("0.0.0.0", "192.168.0.10"):
+            self.assertTrue(Config(host=host).host_is_public, host)
+
+    def test_token_e_gerado_e_digitavel(self):
+        c = Config()
+        self.assertEqual(len(c.token), 16)
+        # sem I, O, 0 e 1: caracteres que se confundem ao digitar no celular
+        self.assertFalse(set("IO01") & set(c.token))
+
+    def test_tokens_sao_distintos_entre_instancias(self):
+        self.assertNotEqual(Config().token, Config().token)
+
+    def test_token_do_ambiente_tem_precedencia(self):
+        import os
+        os.environ["JARVIS_TOKEN"] = "TOKENFIXODOAMBIENTE"
+        try:
+            self.assertEqual(Config().token, "TOKENFIXODOAMBIENTE")
+        finally:
+            del os.environ["JARVIS_TOKEN"]
+
+    def test_url_de_acesso_carrega_o_token(self):
+        from app.core.net import access_url
+        url = access_url("0.0.0.0", 8765, "ABC123")
+        self.assertIn("?k=ABC123", url)
+        self.assertTrue(url.startswith("http://"))
+
+
+class TestCompatibilidadeSafari13(unittest.TestCase):
+    """A interface precisa rodar no Safari 13, que é o do iOS 13."""
+
+    def setUp(self):
+        self.html = (Path(__file__).resolve().parents[1]
+                     / "client" / "web" / "index.html").read_text(encoding="utf-8")
+        # remove comentarios CSS, onde os nomes proibidos aparecem de proposito
+        self.css = re.sub(r"/\*.*?\*/", "", self.html, flags=re.S)
+
+    def test_sem_gap_em_flex(self):
+        # gap em flexbox so chegou no Safari 14.1
+        self.assertNotIn("gap:", self.css)
+
+    def test_sem_inset(self):
+        # a propriedade inset so chegou no Safari 14.1
+        self.assertNotRegex(self.css, r"[^-]inset\s*:")
+
+    def test_sem_focus_visible(self):
+        # :focus-visible so chegou no Safari 15.4, e invalida a regra inteira antes disso
+        self.assertNotIn(":focus-visible", self.css)
+
+    def test_sem_encadeamento_opcional(self):
+        # ?. e ?? nao existem no Safari 13.0
+        self.assertNotRegex(self.html, r"\w\?\.")
+        self.assertNotIn("??", self.html)
+
+    def test_campo_de_texto_nao_causa_zoom_no_ios(self):
+        # abaixo de 16px o iOS dá zoom ao focar o campo
+        m = re.search(r"#text\{[^}]*font-size:\s*(\d+)px", self.css)
+        self.assertIsNotNone(m, "não achei o font-size do campo de texto")
+        self.assertGreaterEqual(int(m.group(1)), 16)
+
+    def test_tem_metadados_de_tela_de_inicio(self):
+        for tag in ("apple-mobile-web-app-capable", "apple-touch-icon", "viewport-fit=cover"):
+            self.assertIn(tag, self.html)
 
 
 if __name__ == "__main__":

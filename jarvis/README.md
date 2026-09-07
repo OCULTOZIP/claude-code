@@ -40,11 +40,61 @@ export JARVIS_WORKSPACE=~/jarvis-workspace   # a área concedida; opcional
 Outros modos:
 
 ```bash
+./run.sh rede     # aceita a rede local, para abrir do celular
 ./run.sh cli      # cliente de terminal, sem navegador
-./run.sh teste    # suíte de testes (49 testes, nenhum consome a API)
+./run.sh teste    # suíte de testes (61 testes, nenhum consome a API)
 ```
 
 O `run.sh` cria o ambiente virtual e instala as dependências na primeira execução.
+
+## Usando pelo iPhone ou iPad
+
+**O servidor não roda dentro do aparelho.** Não existe caminho oficial para isso: o iOS
+não tem terminal e não instala Python. O que funciona, e funciona bem, é o servidor rodar
+num computador da mesma Wi-Fi e o aparelho ser a interface.
+
+No computador:
+
+```bash
+./run.sh rede
+```
+
+Ele imprime um endereço parecido com `http://192.168.0.14:8765/?k=KMERQQUV5XKU5TRC`.
+Digite esse endereço inteiro no Safari do aparelho, uma vez só. A parte `?k=` é o token
+de acesso, e sem ela o servidor recusa a conexão.
+
+Depois de abrir, use **Compartilhar → Adicionar à Tela de Início**. O JARVIS ganha ícone
+próprio, abre em tela cheia sem a barra do Safari e guarda o token, então você nunca mais
+digita o endereço.
+
+### Por que o token existe
+
+No modo `rede` o servidor aceita conexões de qualquer aparelho no mesmo Wi-Fi, e ele
+executa ferramentas que leem e escrevem arquivos. O token é o que separa você de todo o
+resto da rede. Use apenas em rede confiável, e não o compartilhe. Para fixar um token seu
+em vez do gerado a cada inicialização:
+
+```bash
+JARVIS_TOKEN=algumacoisaquevocelembra ./run.sh rede
+```
+
+No modo `./run.sh web` o servidor escuta só em `127.0.0.1`, o próprio sistema operacional
+já impede acesso de fora, e o token não é exigido.
+
+### Voz no iPhone
+
+**O Safari não tem reconhecimento de voz, em nenhuma versão do iOS.** Isso não é um limite
+do JARVIS nem algo que eu possa contornar. A alternativa oficial é o ditado do próprio
+iOS: toque no campo de texto e use a tecla de microfone do teclado. O reconhecimento é do
+sistema, funciona em português e nem passa pelo servidor. Tocar no botão de microfone do
+JARVIS leva você direto para esse caminho.
+
+A **resposta falada funciona normalmente** no Safari. O iOS exige um toque na tela antes
+de liberar o áudio, e o próprio ato de abrir e mandar a primeira mensagem já resolve isso.
+
+A interface foi escrita para o Safari 13, sem `gap` em flexbox, sem `inset` e sem
+`:focus-visible`, que só chegaram em versões posteriores. Há testes que impedem essas
+propriedades de voltarem ao arquivo.
 
 ### Voz
 
@@ -112,7 +162,7 @@ backend/app/
   api/server.py           HTTP e WebSocket
 client/web/index.html     interface com voz
 client/cli.py             cliente de terminal
-tests/                    49 testes
+tests/                    61 testes
 ```
 
 ## Segurança

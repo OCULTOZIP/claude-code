@@ -39,14 +39,23 @@ export JARVIS_WORKSPACE="${JARVIS_WORKSPACE:-$HOME/jarvis-workspace}"
 mkdir -p "$JARVIS_WORKSPACE"
 echo "area concedida: $JARVIS_WORKSPACE"
 
+PORT="${JARVIS_PORT:-8765}"
+
 case "${1:-web}" in
   web)
-    PORT="${JARVIS_PORT:-8765}"
-    echo "abra http://127.0.0.1:$PORT"
-    exec env PYTHONPATH=backend "$VENV/bin/python" -m uvicorn app.api.server:app \
+    # So esta maquina alcanca. Sem token, porque o sistema ja restringe.
+    exec env PYTHONPATH=backend JARVIS_HOST=127.0.0.1 JARVIS_PORT="$PORT" \
+      "$VENV/bin/python" -m uvicorn app.api.server:app \
       --host 127.0.0.1 --port "$PORT" --app-dir backend
+    ;;
+  rede)
+    # Aceita a rede local, para abrir do celular. O token passa a ser obrigatorio
+    # e o endereco completo e impresso na subida do servidor.
+    exec env PYTHONPATH=backend JARVIS_HOST=0.0.0.0 JARVIS_PORT="$PORT" \
+      "$VENV/bin/python" -m uvicorn app.api.server:app \
+      --host 0.0.0.0 --port "$PORT" --app-dir backend
     ;;
   cli)   exec "$VENV/bin/python" client/cli.py ;;
   teste) exec env PYTHONPATH=backend "$VENV/bin/python" -m unittest discover -s tests -v ;;
-  *)     echo "uso: ./run.sh [web|cli|teste]"; exit 1 ;;
+  *)     echo "uso: ./run.sh [web|rede|cli|teste]"; exit 1 ;;
 esac

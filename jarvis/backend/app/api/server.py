@@ -9,19 +9,61 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import json
+import secrets
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from ..agent.orchestrator import Orchestrator
+from ..core.net import access_url
 from ..runtime import Runtime
 
 WEB_DIR = Path(__file__).resolve().parents[3] / "client" / "web"
 
 app = FastAPI(title="JARVIS local")
 RT = Runtime.build()
+
+
+def _authorized(supplied: str | None) -> bool:
+    """Token exigido sempre que o servidor escuta fora do loopback.
+
+    Preso ao loopback, o proprio sistema operacional ja restringe o acesso a esta
+    maquina e o token viraria atrito sem ganho. Aberto para a rede, qualquer
+    aparelho no mesmo Wi-Fi alcancaria as ferramentas de arquivo, entao ele passa
+    a ser obrigatorio.
+    """
+    if not RT.config.host_is_public:
+        return True
+    return bool(supplied) and secrets.compare_digest(supplied, RT.config.token)
+
+
+@app.middleware("http")
+async def gate(request: Request, call_next):
+    path = request.url.path
+    if path.startswith("/api/"):
+        supplied = request.query_params.get("k") or request.headers.get("x-jarvis-token")
+        if not _authorized(supplied):
+            return JSONResponse({"error": "token ausente ou invalido"}, status_code=401)
+    return await call_next(request)
+
+
+@app.on_event("startup")
+async def announce() -> None:
+    cfg = RT.config
+    print("\n" + "─" * 62)
+    print("  JARVIS pronto")
+    print(f"  área concedida  {cfg.workspace}")
+    if cfg.host_is_public:
+        print(f"  abra no celular  {access_url(cfg.host, cfg.port, cfg.token)}")
+        print("  o endereço inteiro importa: sem a parte ?k= o servidor recusa.")
+        print("  qualquer aparelho no mesmo Wi-Fi alcança esta porta, e o token")
+        print("  é o que separa você dos outros. Não compartilhe.")
+    else:
+        print(f"  abra no navegador  http://127.0.0.1:{cfg.port}")
+        print("  escutando só nesta máquina; para abrir do celular use ./run.sh rede")
+    print("─" * 62 + "\n")
 
 
 # ---------------------------------------------------------------- painel
@@ -97,6 +139,13 @@ async def purge(what: str) -> JSONResponse:
 # ---------------------------------------------------------------- conversa
 @app.websocket("/ws")
 async def ws(sock: WebSocket) -> None:
+    if not _authorized(sock.query_params.get("k")):
+        # Aceitar antes de fechar e o unico jeito de o navegador receber o codigo
+        # 1008. Recusar no handshake vira 1006 no cliente, que nao distingue token
+        # invalido de queda de rede e reconectaria em laco.
+        await sock.accept()
+        await sock.close(code=1008, reason="token ausente ou invalido")
+        return
     await sock.accept()
     pending: dict[str, asyncio.Future] = {}
 

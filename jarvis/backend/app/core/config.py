@@ -16,6 +16,12 @@ def _bool(name: str, default: bool) -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "sim", "on"}
 
 
+def _new_token(length: int = 16) -> str:
+    """Token curto o bastante para digitar no celular, longo o bastante para a rede local."""
+    alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # sem I, O, 0 e 1
+    return "".join(secrets.choice(alphabet) for _ in range(length))
+
+
 @dataclass
 class Config:
     """Estado de configuracao de uma instancia local do JARVIS."""
@@ -50,9 +56,23 @@ class Config:
     confirmation_ttl_seconds: int = 120
     trash_retention_days: int = 7
 
+    # Endereco de escuta. 127.0.0.1 aceita so esta maquina; 0.0.0.0 aceita a rede
+    # local, que e o que permite abrir do celular. Ver `host_is_public`.
+    host: str = os.environ.get("JARVIS_HOST", "127.0.0.1")
+    port: int = int(os.environ.get("JARVIS_PORT", "8765"))
+
+    # Token de acesso. Obrigatorio sempre que o servidor escuta fora do loopback,
+    # porque ai qualquer aparelho da mesma rede alcanca as ferramentas de arquivo.
+    token: str = field(default_factory=lambda: os.environ.get("JARVIS_TOKEN", "")
+                       or _new_token())
+
     # Chave efemera de sessao usada para assinar tokens de confirmacao.
     # Vive so na memoria do processo: reiniciar invalida confirmacoes pendentes.
     session_key: bytes = field(default_factory=lambda: secrets.token_bytes(32))
+
+    @property
+    def host_is_public(self) -> bool:
+        return self.host not in {"127.0.0.1", "localhost", "::1"}
 
     def ensure_dirs(self) -> None:
         self.workspace.mkdir(parents=True, exist_ok=True)
@@ -74,6 +94,8 @@ class Config:
             "effort": self.effort,
             "web_search": self.web_search,
             "restricted": self.restricted,
+            "host": self.host,
+            "host_is_public": self.host_is_public,
             "has_api_key": bool(
                 os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")
             ),
