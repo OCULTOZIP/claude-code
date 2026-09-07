@@ -20,7 +20,16 @@ os adaptadores, que passam a usar SAF, CalendarContract e Intent.
 
 ## Rodando
 
-Precisa de Python 3.11 ou superior e de uma chave da API da Anthropic.
+Precisa de **Python 3.10 ou superior** e de uma chave da API da Anthropic. As
+dependências (`anthropic`, `fastapi`, `uvicorn`) não instalam em versões anteriores.
+
+No macOS isso costuma exigir um passo extra: o sistema traz Python 3.9 de fábrica, e o
+`run.sh` recusa começar com ele em vez de falhar no meio da instalação.
+
+```bash
+brew install python@3.12
+JARVIS_PYTHON=$(brew --prefix)/bin/python3.12 ./run.sh
+```
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...          # a chave nunca fica no código

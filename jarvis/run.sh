@@ -3,8 +3,27 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# As dependencias (anthropic, fastapi, uvicorn) exigem Python 3.10 ou superior.
+# O macOS 13 traz 3.9 de fabrica, entao essa checagem vem antes de qualquer coisa.
+PY="${JARVIS_PYTHON:-python3}"
+if ! "$PY" -c 'import sys; sys.exit(0 if sys.version_info >= (3,10) else 1)' 2>/dev/null; then
+  ATUAL="$("$PY" -V 2>/dev/null || echo "nao encontrei o interpretador em: $PY")"
+  cat >&2 <<MSG
+O JARVIS precisa de Python 3.10 ou superior. Encontrei: $ATUAL
+
+  macOS   brew install python@3.12
+          depois: JARVIS_PYTHON=\$(brew --prefix)/bin/python3.12 ./run.sh
+  Ubuntu  sudo apt install python3.12 python3.12-venv
+  Windows instale pelo python.org e use o WSL ou o Git Bash
+
+Se ja tiver uma versao nova em outro caminho, aponte para ela:
+  JARVIS_PYTHON=/caminho/para/python3.12 ./run.sh
+MSG
+  exit 1
+fi
+
 VENV="${JARVIS_VENV:-.venv}"
-[ -d "$VENV" ] || { echo "criando ambiente virtual em $VENV…"; python3 -m venv "$VENV"; }
+[ -d "$VENV" ] || { echo "criando ambiente virtual em $VENV com $("$PY" -V)…"; "$PY" -m venv "$VENV"; }
 "$VENV/bin/pip" install -q --upgrade pip
 "$VENV/bin/pip" install -q -r requirements.txt
 
