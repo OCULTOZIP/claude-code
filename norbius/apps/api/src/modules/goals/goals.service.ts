@@ -6,7 +6,7 @@ import { asc, desc, eq, sql } from "drizzle-orm";
 import type { z } from "zod";
 import type { AuditLogger } from "../../lib/audit";
 import { userToday } from "../../lib/user-context";
-import { notFound } from "../../plugins/errors";
+import { HttpError, notFound } from "../../plugins/errors";
 
 const g = schema.goals;
 const gc = schema.goalContributions;
@@ -25,7 +25,18 @@ export class GoalsService {
   constructor(
     private readonly db: Database,
     private readonly audit: AuditLogger,
+    private readonly plan: { entitlementsInTx(tx: Transaction): Promise<{ maxActiveGoals: number | null }> },
   ) {}
+
+  /** Plano grátis: limite de metas ativas (as existentes nunca são apagadas). */
+  private async assertCanActivate(tx: Transaction) {
+    const { maxActiveGoals } = await this.plan.entitlementsInTx(tx);
+    if (maxActiveGoals === null) return;
+    const [row] = await tx.select({ n: sql<number>`count(*)::int` }).from(g).where(eq(g.status, "active"));
+    if ((row?.n ?? 0) >= maxActiveGoals) {
+      throw new HttpError(403, "PLAN_LIMIT", `O plano grátis permite até ${maxActiveGoals} metas ativas. Conclua ou arquive uma meta, ou assine o Pro para metas ilimitadas.`);
+    }
+  }
 
   private log(userId: string, action: string, id: string, requestId?: string) {
     return this.audit.record({ actorType: "user", actorId: userId, subjectUserId: userId, action, entityType: "goal", entityId: id, requestId: requestId ?? null });
@@ -61,6 +72,7 @@ export class GoalsService {
   }
 
   async createInTx(tx: Transaction, userId: string, input: z.infer<typeof goalInputSchema>, source: "manual" | "onboarding" | "ai" = "manual") {
+    await this.assertCanActivate(tx);
     const [row] = await tx
       .insert(g)
       .values({ userId, name: input.name, targetAmountCents: input.targetAmountCents, targetDate: input.targetDate ?? null, source })
@@ -90,6 +102,7 @@ export class GoalsService {
 
   async setArchived(userId: string, id: string, archived: boolean, requestId: string) {
     await withUserContext(this.db, userId, async (tx) => {
+      if (!archived) await this.assertCanActivate(tx);
       const [row] = await tx.update(g).set({ status: archived ? "archived" : "active" }).where(eq(g.id, id)).returning({ id: g.id });
       if (!row) throw notFound("Meta");
       if (!archived) await this.syncStatus(tx, id);

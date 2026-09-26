@@ -25,6 +25,8 @@ export function registerAiRoutes(
   app.get("/api/v1/ai/status", opts, async (req) => ({
     available: ai.available,
     model: ai.available ? model : null,
+    /** O plano do usuário inclui o assistente (Pro ou teste grátis). */
+    included: (await ai.entitlements(req.user!.id)).assistant,
     usage: await ai.usage(req.user!.id),
   }));
 

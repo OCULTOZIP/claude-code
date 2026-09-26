@@ -123,7 +123,7 @@ export default function LandingPage() {
                 “{q}”
               </li>
             ))}
-            <li className="px-1 pt-2 text-xs text-fg-muted">Assistente em desenvolvimento — disponível em breve.</li>
+            <li className="px-1 pt-2 text-xs text-fg-muted">Incluído no plano Pro · teste 7 dias grátis, sem cartão.</li>
           </ul>
         </div>
       </Section>

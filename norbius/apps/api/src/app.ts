@@ -11,6 +11,11 @@ import type { Mailer } from "./lib/mailer";
 import { rateLimitKey } from "./lib/rate-limit-key";
 import { registerAiRoutes } from "./modules/ai/ai.routes";
 import { AnthropicLlm, type LlmClient } from "./modules/ai/llm";
+import { AsaasProvider } from "./modules/billing/asaas";
+import { registerBillingRoutes } from "./modules/billing/billing.routes";
+import { BillingService } from "./modules/billing/billing.service";
+import { FakeBillingProvider } from "./modules/billing/fake";
+import type { BillingProvider } from "./modules/billing/provider";
 import { MemoriesService } from "./modules/ai/memories.service";
 import { AiOrchestrator } from "./modules/ai/orchestrator";
 import { AccountsRepository } from "./modules/accounts/accounts.repository";
@@ -40,9 +45,17 @@ import { MeService } from "./modules/me/me.service";
 import { registerErrorHandling } from "./plugins/errors";
 import { registerSession } from "./plugins/session";
 
-export type AppDeps = { env: Env; db: Database; mailer: Mailer; log: Logger; redis: Redis | null; llm?: LlmClient | null };
+export type AppDeps = {
+  env: Env;
+  db: Database;
+  mailer: Mailer;
+  log: Logger;
+  redis: Redis | null;
+  llm?: LlmClient | null;
+  billingProvider?: BillingProvider | null;
+};
 
-export async function buildApp({ env, db, mailer, log, redis, llm }: AppDeps) {
+export async function buildApp({ env, db, mailer, log, redis, llm, billingProvider }: AppDeps) {
   const app = Fastify({
     loggerInstance: log as FastifyBaseLogger,
     // Confia apenas nos N proxies imediatos (proxy do web / load balancer).
@@ -83,7 +96,18 @@ export async function buildApp({ env, db, mailer, log, redis, llm }: AppDeps) {
   const cardsRepo = new CardsRepository();
   const transactions = new TransactionsService(db, transactionsRepo, accountsRepo, audit);
   const cards = new CardsService(db, cardsRepo, accountsRepo, transactionsRepo, audit);
-  const goals = new GoalsService(db, audit);
+  // Assinaturas: sem provedor configurado, só o teste grátis funciona (checkout responde 503).
+  const provider =
+    billingProvider !== undefined
+      ? billingProvider
+      : env.BILLING_E2E_FAKE
+        ? new FakeBillingProvider(env.APP_URL)
+        : env.ASAAS_API_KEY
+          ? new AsaasProvider(env.ASAAS_API_KEY, env.ASAAS_ENV, log)
+          : null;
+  const billing = new BillingService(db, provider, audit, log);
+  registerBillingRoutes(app, billing, requireUser, { webhookToken: env.ASAAS_WEBHOOK_TOKEN, providerName: provider?.name ?? null });
+  const goals = new GoalsService(db, audit, billing);
   const recurring = new RecurringService(db, accountsRepo, cardsRepo, transactions, cards, audit);
   const accountsService = new AccountsService(db, accountsRepo, audit);
   const categories = new CategoriesService(db);
@@ -103,7 +127,7 @@ export async function buildApp({ env, db, mailer, log, redis, llm }: AppDeps) {
   const ai = new AiOrchestrator(
     db,
     llmClient,
-    { accounts: accountsService, categories, transactions, cards, goals, recurring, dashboard, memories, audit },
+    { accounts: accountsService, categories, transactions, cards, goals, recurring, dashboard, memories, audit, billing },
     env,
     log,
   );

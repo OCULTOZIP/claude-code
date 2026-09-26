@@ -1,3 +1,4 @@
+import { PRO_AI_MESSAGES_PER_MONTH } from "@norbius/domain";
 import { z } from "zod";
 
 const bool = (fallback: boolean) =>
@@ -30,10 +31,17 @@ const schema = z
     ANTHROPIC_API_KEY: z.string().min(1).optional(),
     AI_MODEL: z.string().min(1).default("claude-opus-5"),
     AI_EFFORT: z.enum(["low", "medium", "high", "xhigh", "max"]).optional(),
-    AI_MONTHLY_MESSAGE_LIMIT: z.coerce.number().int().min(0).default(100),
+    AI_MONTHLY_MESSAGE_LIMIT: z.coerce.number().int().min(0).default(PRO_AI_MESSAGES_PER_MONTH),
     /** Somente E2E: dublê determinístico do LLM (proibido fora de APP_ENV=test). */
     AI_E2E_DOUBLE: z.enum(["1"]).optional(),
     AI_MAX_TOOL_ITERATIONS: z.coerce.number().int().min(1).max(12).default(6),
+    /** Assinaturas (Asaas). Sem chave, o checkout fica indisponível (teste grátis continua funcionando). */
+    ASAAS_API_KEY: z.string().min(1).optional(),
+    ASAAS_ENV: z.enum(["sandbox", "production"]).default("sandbox"),
+    /** Token que o Asaas envia no cabeçalho `asaas-access-token` de cada webhook. */
+    ASAAS_WEBHOOK_TOKEN: z.string().min(32, "ASAAS_WEBHOOK_TOKEN precisa ter pelo menos 32 caracteres").optional(),
+    /** Somente E2E: provedor de pagamento falso (proibido fora de APP_ENV=test). */
+    BILLING_E2E_FAKE: z.enum(["1"]).optional(),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   })
   .superRefine((env, ctx) => {
@@ -52,6 +60,15 @@ const schema = z
     }
     if (env.AI_E2E_DOUBLE && env.APP_ENV !== "test") {
       ctx.addIssue({ code: "custom", message: "AI_E2E_DOUBLE só pode ser usado com APP_ENV=test." });
+    }
+    if (env.BILLING_E2E_FAKE && env.APP_ENV !== "test") {
+      ctx.addIssue({ code: "custom", message: "BILLING_E2E_FAKE só pode ser usado com APP_ENV=test." });
+    }
+    if (env.ASAAS_API_KEY && !env.ASAAS_WEBHOOK_TOKEN) {
+      ctx.addIssue({ code: "custom", message: "Defina ASAAS_WEBHOOK_TOKEN junto com ASAAS_API_KEY." });
+    }
+    if (env.APP_ENV === "production" && env.ASAAS_API_KEY && env.ASAAS_ENV !== "production") {
+      ctx.addIssue({ code: "custom", message: "Em produção, ASAAS_ENV deve ser production." });
     }
     if (deployed && env.MAIL_OUTBOX_DIR) {
       ctx.addIssue({ code: "custom", message: "MAIL_OUTBOX_DIR não pode ser usado em staging/produção." });

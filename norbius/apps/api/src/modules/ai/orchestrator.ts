@@ -9,6 +9,7 @@ import { HttpError, notFound } from "../../plugins/errors";
 import { LlmUnavailableError, type LlmClient } from "./llm";
 import { contextBlock, SYSTEM_PROMPT } from "./prompt";
 import { TOOLS, TOOLS_BY_NAME } from "./tools";
+import { planRequired } from "../billing/billing.service";
 import type { ActionCard, Services, ToolContext, ToolDef } from "./tools/types";
 
 const conv = schema.aiConversations;
@@ -65,6 +66,10 @@ export class AiOrchestrator {
     private readonly env: Env,
     private readonly log: Logger,
   ) {}
+
+  entitlements(userId: string) {
+    return this.services.billing.entitlements(userId);
+  }
 
   get available() {
     return this.llm !== null;
@@ -138,6 +143,7 @@ export class AiOrchestrator {
 
     // Cota + conversa + mensagem do usuário, numa transação.
     const { conversationId, month } = await withUserContext(this.db, userId, async (tx) => {
+      if (!(await this.services.billing.entitlementsInTx(tx)).assistant) throw planRequired();
       const month = `${(await userToday(tx)).slice(0, 7)}-01`;
       const [u] = await tx.select().from(usage).where(eq(usage.periodMonth, month));
       if ((u?.messagesCount ?? 0) >= this.env.AI_MONTHLY_MESSAGE_LIMIT) {

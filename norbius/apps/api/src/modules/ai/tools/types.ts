@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import type { AuditLogger } from "../../../lib/audit";
 import type { AccountsService } from "../../accounts/accounts.service";
+import type { BillingService } from "../../billing/billing.service";
 import type { CardsService } from "../../cards/cards.service";
 import type { CategoriesService } from "../../categories/categories.service";
 import type { DashboardService } from "../../dashboard/dashboard.service";
@@ -19,6 +20,7 @@ export type Services = {
   dashboard: DashboardService;
   memories: MemoriesService;
   audit: AuditLogger;
+  billing: BillingService;
 };
 
 export type ToolContext = {

@@ -79,6 +79,9 @@ test("capturas do chat", async ({ page }) => {
   await createAccount(page, "Corrente", "3.000");
   await createAccount(page, "Reserva", "0");
   await page.goto("/norbius");
+  await page.screenshot({ path: `${DIR}/chat-bloqueado.png` });
+  await page.getByRole("button", { name: "Começar teste grátis" }).click();
+  await expect(page.getByLabel("Mensagem para o NORBIUS")).toBeVisible();
   await page.screenshot({ path: `${DIR}/chat-vazio.png` });
   const input = page.getByLabel("Mensagem para o NORBIUS");
   await input.fill("Gastei 50 no mercado");
@@ -88,4 +91,17 @@ test("capturas do chat", async ({ page }) => {
   await input.press("Enter");
   await expect(page.getByText("Confirmar transferência")).toBeVisible();
   await page.screenshot({ path: `${DIR}/chat.png` });
+});
+
+test("capturas do plano", async ({ page }) => {
+  await verifiedUser(page, "shotsplan");
+  await skipOnboarding(page);
+  await page.goto("/precos");
+  await page.screenshot({ path: `${DIR}/precos.png`, fullPage: true });
+  await page.goto("/configuracoes/plano");
+  await page.screenshot({ path: `${DIR}/plano-gratis.png`, fullPage: true });
+  await page.getByLabel("CPF ou CNPJ").fill("529.982.247-25");
+  await page.getByRole("button", { name: "Continuar para o pagamento" }).click();
+  await expect(page.getByText("Aguardando pagamento")).toBeVisible();
+  await page.screenshot({ path: `${DIR}/plano-pendente.png`, fullPage: true });
 });

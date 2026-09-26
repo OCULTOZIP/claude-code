@@ -10,6 +10,9 @@ const API_PORT = "4100";
 // SSR do web se identifica para a API (rate limit por sessão, não pelo IP do servidor).
 const INTERNAL_API_SECRET = "e2e-internal-secret-with-32-characters!";
 
+export const E2E_API_URL = `http://localhost:${API_PORT}`;
+export const E2E_WEBHOOK_TOKEN = "e2e-webhook-token-with-32-characters!!";
+
 const apiEnv = {
   APP_ENV: "test",
   APP_URL: WEB_URL,
@@ -21,6 +24,9 @@ const apiEnv = {
   MAIL_OUTBOX_DIR: OUTBOX_DIR,
   // Dublê determinístico do LLM (só permitido com APP_ENV=test).
   AI_E2E_DOUBLE: "1",
+  // Provedor de pagamento falso (só permitido com APP_ENV=test); o E2E simula o webhook.
+  BILLING_E2E_FAKE: "1",
+  ASAAS_WEBHOOK_TOKEN: E2E_WEBHOOK_TOKEN,
   LOG_LEVEL: "warn",
 };
 

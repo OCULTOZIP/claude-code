@@ -1,4 +1,5 @@
 import { PLANS } from "@/lib/content";
+import { TRIAL_DAYS } from "@norbius/domain";
 import { Badge, buttonClasses, cn } from "@norbius/ui";
 import { Check } from "lucide-react";
 import Link from "next/link";
@@ -16,7 +17,7 @@ export function PricingCards() {
         >
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">{plan.name}</h3>
-            {!plan.available ? <Badge tone="primary">Em breve</Badge> : null}
+            {plan.id === "pro" ? <Badge tone="primary">{TRIAL_DAYS} dias grátis</Badge> : null}
           </div>
           <p className="mt-1 text-sm text-fg-secondary">{plan.description}</p>
           <p className="mt-6 flex items-baseline gap-2">
@@ -31,15 +32,9 @@ export function PricingCards() {
               </li>
             ))}
           </ul>
-          {plan.cta ? (
-            <Link href={plan.cta.href} className={buttonClasses({ className: "mt-8" })}>
-              {plan.cta.label}
-            </Link>
-          ) : (
-            <p className="mt-8 rounded-xl border border-line px-4 py-3 text-center text-sm text-fg-muted">
-              Valores divulgados antes do lançamento
-            </p>
-          )}
+          <Link href={plan.cta.href} className={buttonClasses({ className: "mt-8", variant: plan.id === "pro" ? "primary" : "secondary" })}>
+            {plan.cta.label}
+          </Link>
         </div>
       ))}
     </div>

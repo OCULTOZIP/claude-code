@@ -6,11 +6,13 @@ import { brl, shortDate } from "@/lib/format";
 import type { ContributionView, GoalView } from "@norbius/contracts";
 import { Alert, Badge, Button, Card, cn, Dialog, EmptyState, Field, Progress } from "@norbius/ui";
 import { Plus } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function GoalsView({ goals, today }: { goals: GoalView[]; today: string }) {
   const router = useRouter();
+  const toast = useToast();
   const [editing, setEditing] = useState<{ goal: GoalView | null } | null>(null);
   const [contributing, setContributing] = useState<GoalView | null>(null);
   const visible = goals.filter((g) => g.status !== "archived");
@@ -50,8 +52,12 @@ export function GoalsView({ goals, today }: { goals: GoalView[]; today: string }
                   size="sm"
                   variant="ghost"
                   onClick={async () => {
-                    await api(`/goals/${g.id}/unarchive`, { method: "POST", json: {} });
-                    router.refresh();
+                    try {
+                      await api(`/goals/${g.id}/unarchive`, { method: "POST", json: {} });
+                      router.refresh();
+                    } catch (err) {
+                      toast.show(err instanceof ClientApiError ? err.message : "Não foi possível reativar.");
+                    }
                   }}
                 >
                   Reativar
@@ -169,7 +175,11 @@ function GoalDialog({ goal, onClose }: { goal: GoalView | null; onClose: () => v
             router.refresh();
           } catch (err) {
             const fields = err instanceof ClientApiError ? err.body?.error.fields : undefined;
-            setErrors(fields ? Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, v[0]!])) : { name: "Não foi possível salvar." });
+            setErrors(
+              fields
+                ? Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, v[0]!]))
+                : { form: err instanceof ClientApiError ? err.message : "Não foi possível salvar." },
+            );
           } finally {
             setLoading(false);
           }
@@ -178,6 +188,14 @@ function GoalDialog({ goal, onClose }: { goal: GoalView | null; onClose: () => v
         <Field label="Nome da meta" name="name" defaultValue={goal?.name} maxLength={60} placeholder="Ex.: Reserva de emergência" error={errors.name} autoFocus />
         <MoneyField label="Valor objetivo (R$)" name="target" defaultCents={goal?.targetAmountCents ?? null} error={errors.targetAmountCents} />
         <Field label="Prazo (opcional)" name="targetDate" type="date" defaultValue={goal?.targetDate ?? ""} error={errors.targetDate} />
+        {errors.form ? (
+          <Alert tone="error">
+            {errors.form}{" "}
+            <Link href="/configuracoes/plano" className="underline">
+              Ver planos
+            </Link>
+          </Alert>
+        ) : null}
         <Button type="submit" loading={loading} className="mt-1 w-full">
           {goal ? "Salvar" : "Criar meta"}
         </Button>

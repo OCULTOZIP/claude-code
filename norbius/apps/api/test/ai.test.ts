@@ -3,7 +3,7 @@ import { todayIn } from "@norbius/domain";
 import { like } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { unverifiedAmounts } from "../src/modules/ai/orchestrator";
-import { createTestApp, TestClient, verifiedClient } from "./helpers";
+import { createTestApp, proClient, TestClient, verifiedClient } from "./helpers";
 import { lastToolResults, ScriptedLlm } from "./scripted-llm";
 
 const owner = createDatabase(
@@ -41,7 +41,7 @@ afterAll(async () => {
 });
 
 async function userWithAccount(tag: string, accounts = ["Nubank"]) {
-  const { client } = await verifiedClient(ctx, `ai-${tag}`);
+  const { client } = await proClient(ctx, `ai-${tag}`);
   for (const name of accounts) await client.post("/api/v1/accounts", { name, type: "checking", initialBalanceCents: 100000 });
   return client;
 }
@@ -275,7 +275,7 @@ describe("cota e disponibilidade", () => {
   it("bloqueia ao atingir o limite mensal (JSON, antes do stream)", async () => {
     const limited = await createTestApp({ AI_MONTHLY_MESSAGE_LIMIT: "1" }, { llm: new ScriptedLlm().script({ text: "oi" }) });
     try {
-      const { client } = await verifiedClient(limited, "ai-quota");
+      const { client } = await proClient(limited, "ai-quota");
       expect((await client.post("/api/v1/ai/chat", { message: "oi" })).statusCode).toBe(200);
       const second = await client.post("/api/v1/ai/chat", { message: "de novo" });
       expect(second.statusCode).toBe(429);
@@ -284,6 +284,15 @@ describe("cota e disponibilidade", () => {
     } finally {
       await limited.close();
     }
+  });
+
+  it("plano grátis não inclui o assistente (JSON, antes do stream)", async () => {
+    const { client } = await verifiedClient(ctx, "ai-free");
+    expect((await client.get("/api/v1/ai/status")).json()).toMatchObject({ available: true, included: false });
+    const res = await client.post("/api/v1/ai/chat", { message: "oi" });
+    expect(res.statusCode).toBe(403);
+    expect(res.json().error.code).toBe("PLAN_REQUIRED");
+    expect((await client.get("/api/v1/ai/status")).json().usage.used).toBe(0);
   });
 
   it("sem chave configurada o assistente fica indisponível (sem simulação)", async () => {

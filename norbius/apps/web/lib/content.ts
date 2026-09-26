@@ -1,3 +1,4 @@
+import { formatBRL, FREE_MAX_ACTIVE_GOALS, PRO_AI_MESSAGES_PER_MONTH, PRO_PRICE_CENTS, TRIAL_DAYS } from "@norbius/domain";
 // Conteúdo do site de marketing. Disponibilidade de cada recurso é explícita:
 // o site nunca apresenta como pronto algo que ainda não existe no produto.
 
@@ -12,22 +13,22 @@ export const FEATURES: { title: string; description: string; availability: Avail
   {
     title: "Contas e transações",
     description: "Registre receitas, despesas e transferências entre suas contas, com categorias e recorrências.",
-    availability: "soon",
+    availability: "available",
   },
   {
     title: "Cartões de crédito",
     description: "Limite, faturas, parcelas e vencimentos organizados sem contar o mesmo gasto duas vezes.",
-    availability: "soon",
+    availability: "available",
   },
   {
     title: "Metas",
     description: "Defina objetivos, acompanhe aportes e veja o ritmo necessário para chegar lá.",
-    availability: "soon",
+    availability: "available",
   },
   {
     title: "Assistente NORBIUS",
-    description: "Converse em português: registre gastos, consulte saldos e entenda sua situação em segundos.",
-    availability: "soon",
+    description: "Converse em português: registre gastos, consulte saldos e entenda sua situação em segundos. Incluído no plano Pro.",
+    availability: "available",
   },
   {
     title: "Projeções e insights",
@@ -79,29 +80,34 @@ export const SECURITY = [
 export const PLANS = [
   {
     id: "free",
-    name: "Free",
+    name: "Grátis",
     price: "R$ 0",
     period: "para sempre",
     description: "Para organizar o dia a dia financeiro.",
-    features: ["Dashboard", "Contas, transações e categorias", "Até 3 metas", "Interações limitadas com o NORBIUS"],
-    cta: { label: "Começar agora", href: "/cadastro" },
-    available: true,
+    features: [
+      "Painel com seus dados reais",
+      "Contas, transações, categorias e transferências",
+      "Cartões com parcelas e faturas",
+      "Contas fixas e receitas recorrentes",
+      `Até ${FREE_MAX_ACTIVE_GOALS} metas ativas`,
+      "Exportação em CSV",
+    ],
+    cta: { label: "Começar grátis", href: "/cadastro" },
   },
   {
     id: "pro",
     name: "Pro",
-    price: "Em breve",
-    period: "",
-    description: "Para quem quer a inteligência completa.",
+    price: formatBRL(PRO_PRICE_CENTS.monthly),
+    period: `por mês · ou ${formatBRL(PRO_PRICE_CENTS.yearly)} por ano`,
+    description: "Com o assistente NORBIUS.",
     features: [
-      "NORBIUS completo",
-      "Projeções de saldo",
-      "Insights avançados",
-      "Relatórios em PDF e CSV",
-      "Maior limite de interações",
+      "Tudo do plano grátis",
+      `Assistente NORBIUS: pergunte e registre conversando (até ${PRO_AI_MESSAGES_PER_MONTH} mensagens por mês)`,
+      "Metas ilimitadas",
+      `${TRIAL_DAYS} dias grátis, sem cartão`,
+      "Pix, boleto ou cartão · cancele quando quiser",
     ],
-    cta: null,
-    available: false,
+    cta: { label: `Testar ${TRIAL_DAYS} dias grátis`, href: "/cadastro" },
   },
 ] as const;
 
@@ -132,6 +138,6 @@ export const FAQ = [
   },
   {
     q: "Quanto custa?",
-    a: "O plano Free é gratuito. O plano Pro, com a inteligência completa, será lançado em breve; os valores serão divulgados na página de preços antes de qualquer cobrança.",
+    a: `O plano grátis não tem custo e não expira. O Pro custa ${formatBRL(PRO_PRICE_CENTS.monthly)} por mês ou ${formatBRL(PRO_PRICE_CENTS.yearly)} por ano, com ${TRIAL_DAYS} dias de teste grátis sem cartão. O pagamento é feito por Pix, boleto ou cartão pelo Asaas; o NORBIUS não recebe os dados do seu cartão. Você pode cancelar quando quiser e continua com o Pro até o fim do período já pago.`,
   },
 ];

@@ -2,15 +2,16 @@
 
 > Seu dinheiro. Uma inteligência trabalhando por você.
 
-Sistema de inteligência financeira pessoal (SaaS, pt-BR). Arquitetura completa em [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md). Decisões: [fundação](docs/adr/0001-fundacao.md) · [núcleo financeiro](docs/adr/0002-nucleo-financeiro.md) · [NORBIUS AI](docs/adr/0003-norbius-ai.md).
+Sistema de inteligência financeira pessoal (SaaS, pt-BR). Arquitetura completa em [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md). Decisões: [fundação](docs/adr/0001-fundacao.md) · [núcleo financeiro](docs/adr/0002-nucleo-financeiro.md) · [NORBIUS AI](docs/adr/0003-norbius-ai.md) · [assinaturas](docs/adr/0004-assinaturas.md).
 
-**Status:** Fase 3 — NORBIUS AI concluída.
+**Status:** Fase 6 — Assinaturas concluída. A Fase 6 foi antecipada a pedido do dono do produto; as Fases 4 (inteligência), 5 (experiência premium) e 7 (admin) ainda não foram iniciadas.
 
 | Fase | Entregue |
 |---|---|
 | 1 · Foundation | Monorepo, banco com RLS, autenticação completa, design system, site, área logada |
 | 2 · Financial Core | Onboarding conversacional, contas, transações, transferências, categorias, contas fixas/recorrências, cartões (parcelas, faturas, pagamento), metas, painel com dados reais, exportação CSV |
 | 3 · NORBIUS AI | Assistente conversacional (Claude) com streaming: consultas com dados reais, registro por linguagem natural com Desfazer, ações sensíveis com confirmação, memórias explícitas, cota mensal, avaliação |
+| 6 · SaaS | Planos Grátis/Pro (R$ 14,90/mês ou R$ 149/ano), teste de 7 dias sem cartão, assinatura via Asaas (Pix, boleto, cartão), webhook idempotente, limites por plano, cancelamento, histórico de cobranças |
 
 ## Estrutura
 
@@ -43,6 +44,8 @@ Sem `RESEND_API_KEY`, os e-mails (verificação, redefinição de senha) aparece
 
 O assistente NORBIUS precisa de `ANTHROPIC_API_KEY` (modelo em `AI_MODEL`, padrão `claude-opus-5`). Sem a chave, a tela `/norbius` informa que o assistente não está ativo e o resto do app funciona normalmente.
 
+Assinaturas usam o Asaas: `ASAAS_API_KEY`, `ASAAS_ENV` (`sandbox` ou `production`) e `ASAAS_WEBHOOK_TOKEN` (o mesmo token cadastrado no webhook do painel do Asaas, apontando para `https://<api>/api/v1/billing/webhooks/asaas`). Sem a chave, o teste grátis funciona e o checkout informa que o pagamento não está disponível.
+
 ## Testes
 
 ```bash
@@ -61,4 +64,5 @@ ANTHROPIC_API_KEY=... pnpm --filter @norbius/api eval:ai   # avaliação do mode
 - Nenhum dado mockado apresentado como real; nenhum botão sem função.
 - Valores monetários em centavos (`bigint`), nunca `float`.
 - Nova tabela = privilégios concedidos explicitamente na migração.
+- Acesso Pro só é liberado por pagamento confirmado via webhook; limites de plano são aplicados na API (ADR 0004).
 - A IA nunca calcula nem inventa valores: todo número vem de uma tool; alterar, excluir e transferir exigem confirmação do usuário (ADR 0003).

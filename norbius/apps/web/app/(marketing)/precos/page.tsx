@@ -9,7 +9,7 @@ export default function PricingPage() {
     <Section
       eyebrow="Preços"
       title="Simples e transparente."
-      description="Comece grátis. O plano Pro, com a inteligência completa do NORBIUS, será lançado em breve — os valores serão publicados aqui antes de qualquer cobrança."
+      description="Comece grátis. Quando quiser o assistente NORBIUS, teste o Pro por 7 dias sem cartão — sem cobrança automática ao fim do teste."
     >
       <PricingCards />
     </Section>

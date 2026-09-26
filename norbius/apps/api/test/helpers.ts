@@ -5,10 +5,14 @@ import { buildApp } from "../src/app";
 import { loadEnv } from "../src/env";
 import { MemoryMailer } from "../src/lib/mailer";
 import type { LlmClient } from "../src/modules/ai/llm";
+import type { BillingProvider } from "../src/modules/billing/provider";
 
 export const APP_URL = "http://localhost:3000";
 
-export async function createTestApp(overrides: Record<string, string> = {}, deps: { llm?: LlmClient | null } = {}) {
+export async function createTestApp(
+  overrides: Record<string, string> = {},
+  deps: { llm?: LlmClient | null; billingProvider?: BillingProvider | null } = {},
+) {
   const env = loadEnv({
     APP_ENV: "test",
     APP_URL,
@@ -27,6 +31,7 @@ export async function createTestApp(overrides: Record<string, string> = {}, deps
     log: createLogger({ service: "api-test", level: "silent" }),
     redis: null,
     llm: deps.llm ?? null,
+    billingProvider: deps.billingProvider ?? null,
   });
   await app.ready();
   return {
@@ -102,4 +107,12 @@ export async function verifiedClient(ctx: { app: FastifyInstance; mailer: Memory
   await client.get(link.pathname + link.search);
   if (!client.hasSession()) throw new Error("verificação não abriu sessão");
   return { client, email };
+}
+
+/** Cliente verificado com o teste grátis do Pro ativo (assistente liberado). */
+export async function proClient(ctx: { app: FastifyInstance; mailer: MemoryMailer }, tag: string) {
+  const r = await verifiedClient(ctx, tag);
+  const trial = await r.client.post("/api/v1/billing/trial");
+  if (trial.statusCode !== 200) throw new Error(`teste grátis falhou: ${trial.body}`);
+  return r;
 }

@@ -1,6 +1,7 @@
 "use client";
-import { api } from "@/lib/client-api";
-import { Button, cn, NorbiusCore } from "@norbius/ui";
+import { api, ClientApiError } from "@/lib/client-api";
+import { TRIAL_DAYS } from "@norbius/domain";
+import { Button, buttonClasses, cn, NorbiusCore } from "@norbius/ui";
 import { ArrowUp, MessageSquarePlus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -65,6 +66,8 @@ async function readEvents(res: Response, onEvent: (e: ServerEvent) => void) {
 
 export function ChatView({
   available,
+  included,
+  trialAvailable,
   usage,
   conversations,
   conversationId: initialId,
@@ -72,6 +75,8 @@ export function ChatView({
   name,
 }: {
   available: boolean;
+  included: boolean;
+  trialAvailable: boolean;
   usage: { used: number; limit: number };
   conversations: { id: string; title: string | null; lastMessageAt: string }[];
   conversationId: string | null;
@@ -86,6 +91,18 @@ export function ChatView({
   const [activity, setActivity] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [used, setUsed] = useState(usage.used);
+  // Troca de conversa (links da lateral, "Nova conversa") reinicia a tela; o
+  // refresh depois de uma resposta traz a mesma conversa e não apaga o que
+  // está sendo digitado.
+  const [syncedId, setSyncedId] = useState(initialId);
+  if (initialId !== syncedId) {
+    setSyncedId(initialId);
+    if (initialId !== conversationId) {
+      setConversationId(initialId);
+      setItems(initialItems);
+      setNotice(null);
+    }
+  }
   const bottom = useRef<HTMLDivElement>(null);
   const exhausted = used >= usage.limit;
 
@@ -166,6 +183,42 @@ export function ChatView({
           O assistente conversacional não está configurado neste ambiente. Todo o resto do app funciona normalmente — registre e
           consulte suas finanças pelas telas de Transações, Contas, Cartões e Metas.
         </p>
+      </div>
+    );
+  }
+
+  if (!included) {
+    return (
+      <div className="mx-auto flex max-w-lg flex-col items-center py-16 text-center">
+        <NorbiusCore state="ACTIVE" size={120} />
+        <h1 className="mt-8 text-2xl font-semibold">O assistente NORBIUS faz parte do Pro</h1>
+        <p className="mt-3 text-sm leading-relaxed text-fg-secondary">
+          Pergunte sobre suas finanças e registre gastos conversando. {trialAvailable ? `Teste por ${TRIAL_DAYS} dias sem cartão — nada é cobrado no fim.` : "Assine para continuar usando."}
+        </p>
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+          {trialAvailable ? (
+            <Button
+              loading={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await api("/billing/trial", { method: "POST", json: {} });
+                  router.refresh();
+                } catch (err) {
+                  setNotice(err instanceof ClientApiError ? err.message : "Não foi possível começar o teste.");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Começar teste grátis
+            </Button>
+          ) : null}
+          <Link href="/configuracoes/plano" className={buttonClasses({ variant: trialAvailable ? "secondary" : "primary" })}>
+            Ver planos
+          </Link>
+        </div>
+        {notice ? <p className="mt-4 text-sm text-primary-light">{notice}</p> : null}
       </div>
     );
   }

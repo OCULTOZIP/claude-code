@@ -49,4 +49,12 @@ describe("loadEnv", () => {
   it("rejeita segredo curto", () => {
     expect(() => loadEnv({ ...base, BETTER_AUTH_SECRET: "curto" })).toThrow(/32/);
   });
+
+  it("pagamento: provedor falso só em teste; Asaas exige token do webhook e ambiente de produção", () => {
+    expect(() => loadEnv({ ...base, BILLING_E2E_FAKE: "1" })).toThrow(/BILLING_E2E_FAKE/);
+    expect(() => loadEnv({ ...base, ASAAS_API_KEY: "k" })).toThrow(/ASAAS_WEBHOOK_TOKEN/);
+    const prod = { ...base, APP_ENV: "production", RESEND_API_KEY: "k", REDIS_URL: "redis://r:6379", INTERNAL_API_SECRET: "s".repeat(32) };
+    expect(() => loadEnv({ ...prod, ASAAS_API_KEY: "k", ASAAS_WEBHOOK_TOKEN: "t".repeat(32) })).toThrow(/ASAAS_ENV/);
+    expect(loadEnv({ ...prod, ASAAS_API_KEY: "k", ASAAS_WEBHOOK_TOKEN: "t".repeat(32), ASAAS_ENV: "production" }).ASAAS_ENV).toBe("production");
+  });
 });

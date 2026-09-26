@@ -50,6 +50,20 @@
       "when": 1790400564131,
       "tag": "0006_ai_cards",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790439446189,
+      "tag": "0007_billing",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790439450525,
+      "tag": "0008_billing_grants",
+      "breakpoints": true
     }
   ]
 }

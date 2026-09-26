@@ -1,3 +1,4 @@
+import { FREE_MAX_ACTIVE_GOALS } from "@norbius/domain";
 import { z } from "zod";
 import { accountTypeSchema, amountCentsSchema, isoDateSchema, signedCentsSchema } from "./finance";
 import { nameSchema } from "./auth";
@@ -70,7 +71,8 @@ export const onboardingCompleteSchema = z.object({
         targetDate: isoDateSchema.nullable().default(null),
       }),
     )
-    .max(10)
+    // Contas novas começam no plano grátis (limite de metas ativas).
+    .max(FREE_MAX_ACTIVE_GOALS)
     .default([]),
 });
 export type OnboardingCompleteInput = z.input<typeof onboardingCompleteSchema>;

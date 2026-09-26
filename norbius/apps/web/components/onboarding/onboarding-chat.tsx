@@ -4,6 +4,7 @@ import { api } from "@/lib/client-api";
 import { brl } from "@/lib/format";
 import { useHydrated } from "@/lib/use-hydrated";
 import type { OnboardingSummary } from "@norbius/contracts";
+import { FREE_MAX_ACTIVE_GOALS } from "@norbius/domain";
 import { Alert, Button, cn, Field, NorbiusCore, SelectField } from "@norbius/ui";
 import { Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -423,7 +424,7 @@ function CardsStep({ d, onNext }: { d: Draft; onNext: (p: Partial<Draft>) => voi
         <Field label="Dia do vencimento" name="due" inputMode="numeric" placeholder="10" />
         {error ? <p className="text-xs text-primary-light sm:col-span-2">{error}</p> : null}
         <div className="sm:col-span-2">
-          <Button type="submit" variant="secondary" disabled={items.length >= 10}>
+          <Button type="submit" variant="secondary" disabled={items.length >= FREE_MAX_ACTIVE_GOALS}>
             <Plus aria-hidden className="size-4" /> Adicionar cartão
           </Button>
         </div>
@@ -534,7 +535,7 @@ function GoalsStep({ d, onNext }: { d: Draft; onNext: (p: Partial<Draft>) => voi
         <Field label="Prazo (opcional)" name="date" type="date" />
         {error ? <p className="text-xs text-primary-light sm:col-span-2">{error}</p> : null}
         <div className="flex items-end sm:col-span-1">
-          <Button type="submit" variant="secondary" disabled={items.length >= 10}>
+          <Button type="submit" variant="secondary" disabled={items.length >= FREE_MAX_ACTIVE_GOALS}>
             <Plus aria-hidden className="size-4" /> Adicionar meta
           </Button>
         </div>
