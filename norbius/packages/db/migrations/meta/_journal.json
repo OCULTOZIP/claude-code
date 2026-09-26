@@ -15,6 +15,20 @@
       "when": 1790396373555,
       "tag": "0001_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790398143841,
+      "tag": "0002_financial_core",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790398148945,
+      "tag": "0003_finance_grants_seed",
+      "breakpoints": true
     }
   ]
 }

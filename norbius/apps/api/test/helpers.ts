@@ -84,3 +84,20 @@ export function extractLink(text: string) {
   if (!match) throw new Error("link não encontrado no e-mail");
   return new URL(match[0]);
 }
+
+/** Cadastra, verifica e devolve um cliente autenticado. */
+export async function verifiedClient(ctx: { app: FastifyInstance; mailer: MemoryMailer }, tag: string) {
+  const client = new TestClient(ctx.app);
+  const email = uniqueEmail(tag);
+  const res = await client.post("/api/auth/sign-up/email", {
+    name: "Teste",
+    email,
+    password: "senha-muito-forte-123",
+    acceptTerms: true,
+  });
+  if (res.statusCode !== 200) throw new Error(`cadastro falhou: ${res.body}`);
+  const link = extractLink(ctx.mailer.lastTo(email)!.text);
+  await client.get(link.pathname + link.search);
+  if (!client.hasSession()) throw new Error("verificação não abriu sessão");
+  return { client, email };
+}

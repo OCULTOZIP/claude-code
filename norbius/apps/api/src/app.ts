@@ -8,7 +8,26 @@ import type { Env } from "./env";
 import { AuditLogger } from "./lib/audit";
 import { createAuth } from "./lib/auth";
 import type { Mailer } from "./lib/mailer";
+import { AccountsRepository } from "./modules/accounts/accounts.repository";
+import { registerAccountRoutes } from "./modules/accounts/accounts.routes";
+import { AccountsService } from "./modules/accounts/accounts.service";
 import { registerAuthRoutes } from "./modules/auth/auth.routes";
+import { CardsRepository } from "./modules/cards/cards.repository";
+import { registerCardRoutes } from "./modules/cards/cards.routes";
+import { CardsService } from "./modules/cards/cards.service";
+import { registerCategoryRoutes } from "./modules/categories/categories.routes";
+import { CategoriesService } from "./modules/categories/categories.service";
+import { registerDashboardRoutes } from "./modules/dashboard/dashboard.routes";
+import { DashboardService } from "./modules/dashboard/dashboard.service";
+import { registerGoalRoutes } from "./modules/goals/goals.routes";
+import { GoalsService } from "./modules/goals/goals.service";
+import { registerOnboardingRoutes } from "./modules/onboarding/onboarding.routes";
+import { OnboardingService } from "./modules/onboarding/onboarding.service";
+import { registerRecurringRoutes } from "./modules/recurring/recurring.routes";
+import { RecurringService } from "./modules/recurring/recurring.service";
+import { TransactionsRepository } from "./modules/transactions/transactions.repository";
+import { registerTransactionRoutes } from "./modules/transactions/transactions.routes";
+import { TransactionsService } from "./modules/transactions/transactions.service";
 import { registerHealthRoutes } from "./modules/health/health.routes";
 import { MeRepository } from "./modules/me/me.repository";
 import { registerMeRoutes } from "./modules/me/me.routes";
@@ -51,6 +70,23 @@ export async function buildApp({ env, db, mailer, log, redis }: AppDeps) {
   registerHealthRoutes(app, db, redis);
   registerAuthRoutes(app, auth, env);
   registerMeRoutes(app, new MeService(new MeRepository(db), audit), requireUser);
+
+  // Núcleo financeiro (composição manual de dependências; sem container de DI).
+  const accountsRepo = new AccountsRepository();
+  const transactionsRepo = new TransactionsRepository();
+  const cardsRepo = new CardsRepository();
+  const transactions = new TransactionsService(db, transactionsRepo, accountsRepo, audit);
+  const cards = new CardsService(db, cardsRepo, accountsRepo, transactionsRepo, audit);
+  const goals = new GoalsService(db, audit);
+  const recurring = new RecurringService(db, accountsRepo, cardsRepo, transactions, cards, audit);
+  registerAccountRoutes(app, new AccountsService(db, accountsRepo, audit), requireUser);
+  registerCategoryRoutes(app, new CategoriesService(db), requireUser);
+  registerTransactionRoutes(app, transactions, requireUser);
+  registerCardRoutes(app, cards, requireUser);
+  registerRecurringRoutes(app, recurring, requireUser);
+  registerGoalRoutes(app, goals, requireUser);
+  registerOnboardingRoutes(app, new OnboardingService(db, accountsRepo, cards, recurring, goals, audit), requireUser);
+  registerDashboardRoutes(app, new DashboardService(db, accountsRepo, cardsRepo, cards, goals), requireUser);
 
   return app;
 }

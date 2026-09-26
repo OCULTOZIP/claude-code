@@ -52,6 +52,8 @@ export const profiles = pgTable(
       .default("not_started"),
     onboardingStep: text("onboarding_step"),
     onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
+    // Rascunho do onboarding (retomável em qualquer dispositivo); apagado ao concluir.
+    onboardingDraft: jsonb("onboarding_draft"),
     preferences: jsonb("preferences").notNull().default({}),
     ...timestamps,
   },

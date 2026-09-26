@@ -1,5 +1,5 @@
 {
-  "name": "@norbius/contracts",
+  "name": "@norbius/domain",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,10 +9,6 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
-  },
-  "dependencies": {
-    "zod": "^4.6.5",
-    "@norbius/domain": "workspace:*"
   },
   "devDependencies": {
     "typescript": "~6.0.3",

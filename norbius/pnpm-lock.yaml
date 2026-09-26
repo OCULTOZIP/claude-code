@@ -32,6 +32,9 @@ importers:
       '@norbius/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@norbius/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@norbius/observability':
         specifier: workspace:*
         version: link:../../packages/observability
@@ -127,6 +130,9 @@ importers:
 
   packages/contracts:
     dependencies:
+      '@norbius/domain':
+        specifier: workspace:*
+        version: link:../domain
       zod:
         specifier: ^4.6.5
         version: 4.6.5
@@ -156,6 +162,15 @@ importers:
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^5.0.2
+        version: 5.0.2(@types/node@22.20.4)(vite@8.3.1(@types/node@22.20.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+
+  packages/domain:
+    devDependencies:
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
