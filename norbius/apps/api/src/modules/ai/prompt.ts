@@ -50,3 +50,14 @@ export function contextBlock(s: ContextSnapshot): Anthropic.Beta.BetaTextBlockPa
   ];
   return { type: "text", text: lines.join("\n") };
 }
+
+/**
+ * Turno falado (modo ligação): a resposta vira áudio na hora. Fica depois do
+ * ponto de cache, então não invalida o prompt estável.
+ */
+export const VOICE_STYLE = `Modo voz: o usuário está falando com você em tempo real e sua resposta será lida em voz alta.
+- Responda como numa conversa falada: frases curtas e naturais, em geral de uma a três frases.
+- Comece já pela resposta; nada de introdução.
+- Sem markdown, listas, tabelas, emojis ou símbolos. Diga valores como se fala: "mil e duzentos reais", não "R$ 1.200,00".
+- Se precisar de uma ferramenta, diga antes uma frase curtíssima (por exemplo "Deixa eu ver.") e então consulte.
+- Se a resposta completa for longa, dê o essencial e pergunte se o usuário quer os detalhes.`;

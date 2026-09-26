@@ -7,7 +7,7 @@ import type { Env } from "../../env";
 import { userTimezone, userToday } from "../../lib/user-context";
 import { HttpError, notFound } from "../../plugins/errors";
 import { LlmUnavailableError, type LlmClient } from "./llm";
-import { contextBlock, SYSTEM_PROMPT } from "./prompt";
+import { contextBlock, SYSTEM_PROMPT, VOICE_STYLE } from "./prompt";
 import { TOOLS, TOOLS_BY_NAME } from "./tools";
 import { planRequired } from "../billing/billing.service";
 import type { ActionCard, Services, ToolContext, ToolDef } from "./tools/types";
@@ -137,7 +137,7 @@ export class AiOrchestrator {
   }
 
   // ── Chat ──────────────────────────────────────────────────
-  async chat(userId: string, input: { conversationId?: string | undefined; message: string }, requestId: string, emit: (e: ChatEvent) => void) {
+  async chat(userId: string, input: { conversationId?: string | undefined; message: string; voice?: boolean | undefined }, requestId: string, emit: (e: ChatEvent) => void) {
     if (!this.llm) throw new HttpError(503, "AI_UNAVAILABLE", "O assistente NORBIUS não está configurado neste ambiente.");
     const llm = this.llm;
 
@@ -173,6 +173,7 @@ export class AiOrchestrator {
     const system: Anthropic.Beta.BetaTextBlockParam[] = [
       { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
       contextBlock(context),
+      ...(input.voice ? [{ type: "text" as const, text: VOICE_STYLE }] : []),
     ];
     const evidence: string[] = [system[1]!.text];
     let finalText = "";
@@ -183,7 +184,7 @@ export class AiOrchestrator {
       const messages = await this.history(userId, conversationId);
       let result;
       try {
-        result = await llm.stream({ system, messages, tools: this.tools }, (delta) => emit({ type: "text", delta }));
+        result = await llm.stream({ system, messages, tools: this.tools, ...(input.voice ? { effort: "low" as const } : {}) }, (delta) => emit({ type: "text", delta }));
         jsonRetries = 0;
       } catch (err) {
         if (err instanceof LlmUnavailableError) {

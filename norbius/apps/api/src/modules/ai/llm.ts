@@ -5,6 +5,8 @@ export type LlmParams = {
   system: Anthropic.Beta.BetaTextBlockParam[];
   messages: Anthropic.Beta.BetaMessageParam[];
   tools: Anthropic.Beta.BetaTool[];
+  /** Sobrepõe AI_EFFORT neste turno (ex.: "low" no modo voz, para responder mais rápido). */
+  effort?: Env["AI_EFFORT"];
 };
 
 export type LlmResult = {
@@ -44,7 +46,7 @@ export class AnthropicLlm implements LlmClient {
       // Anthropic para a categoria, dentro da mesma chamada.
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
-      ...(this.effort ? { output_config: { effort: this.effort } } : {}),
+      ...((params.effort ?? this.effort) ? { output_config: { effort: params.effort ?? this.effort } } : {}),
       system: params.system,
       tools: params.tools,
       messages: params.messages,

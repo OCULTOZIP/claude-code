@@ -10,6 +10,8 @@ const idParam = z.object({ id: uuidSchema });
 const chatBody = z.object({
   conversationId: uuidSchema.optional(),
   message: z.string().trim().min(1, "Escreva uma mensagem.").max(2000, "Mensagem muito longa (máx. 2000 caracteres)."),
+  /** Turno falado (modo ligação): resposta curta, sem formatação, com esforço baixo. */
+  voice: z.boolean().optional(),
 });
 
 export function registerAiRoutes(

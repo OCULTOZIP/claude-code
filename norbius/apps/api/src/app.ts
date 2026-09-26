@@ -10,6 +10,7 @@ import { createAuth } from "./lib/auth";
 import type { Mailer } from "./lib/mailer";
 import { rateLimitKey } from "./lib/rate-limit-key";
 import { registerAiRoutes } from "./modules/ai/ai.routes";
+import { registerVoiceRoutes } from "./modules/ai/voice.routes";
 import { AnthropicLlm, type LlmClient } from "./modules/ai/llm";
 import { AsaasProvider } from "./modules/billing/asaas";
 import { registerBillingRoutes } from "./modules/billing/billing.routes";
@@ -132,6 +133,7 @@ export async function buildApp({ env, db, mailer, log, redis, llm, billingProvid
     log,
   );
   registerAiRoutes(app, ai, memories, requireUser, llmClient?.model ?? env.AI_MODEL);
+  registerVoiceRoutes(app, requireUser, env.TTS_URL);
 
   return app;
 }

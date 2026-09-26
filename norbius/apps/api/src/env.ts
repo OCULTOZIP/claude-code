@@ -34,6 +34,8 @@ const schema = z
     AI_MONTHLY_MESSAGE_LIMIT: z.coerce.number().int().min(0).default(PRO_AI_MESSAGES_PER_MONTH),
     /** Somente E2E: dublê determinístico do LLM (proibido fora de APP_ENV=test). */
     AI_E2E_DOUBLE: z.enum(["1"]).optional(),
+    /** Voz neural local (Piper, ver tts/server.py). Sem ela, o web usa a voz do navegador. */
+    TTS_URL: z.url().optional(),
     AI_MAX_TOOL_ITERATIONS: z.coerce.number().int().min(1).max(12).default(6),
     /** Assinaturas (Asaas). Sem chave, o checkout fica indisponível (teste grátis continua funcionando). */
     ASAAS_API_KEY: z.string().min(1).optional(),
