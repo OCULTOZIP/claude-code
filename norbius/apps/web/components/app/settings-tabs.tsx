@@ -8,6 +8,7 @@ export function SettingsTabs() {
         { href: "/configuracoes", label: "Perfil" },
         { href: "/configuracoes/seguranca", label: "Segurança" },
         { href: "/configuracoes/categorias", label: "Categorias" },
+        { href: "/configuracoes/memorias", label: "Memórias do NORBIUS" },
       ]}
     />
   );

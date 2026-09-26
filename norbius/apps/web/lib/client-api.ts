@@ -23,5 +23,6 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown 
     const body = (await res.json().catch(() => null)) as ApiError | null;
     throw new ClientApiError(res.status, body);
   }
+  if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }

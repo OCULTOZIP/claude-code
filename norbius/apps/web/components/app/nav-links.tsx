@@ -1,13 +1,14 @@
 "use client";
 import { cn } from "@norbius/ui";
-import { ArrowLeftRight, CreditCard, LayoutGrid, Landmark, Settings, Target } from "lucide-react";
+import { ArrowLeftRight, CreditCard, LayoutGrid, Landmark, Settings, Sparkles, Target } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
   { href: "/dashboard", label: "Painel", icon: LayoutGrid, mobile: true },
+  { href: "/norbius", label: "NORBIUS", icon: Sparkles, mobile: true },
   { href: "/transacoes", label: "Transações", icon: ArrowLeftRight, mobile: true },
-  { href: "/contas", label: "Contas", icon: Landmark, mobile: true },
+  { href: "/contas", label: "Contas", icon: Landmark, mobile: false },
   { href: "/cartoes", label: "Cartões", icon: CreditCard, mobile: true },
   { href: "/metas", label: "Metas", icon: Target, mobile: true },
   { href: "/configuracoes", label: "Configurações", icon: Settings, mobile: false },

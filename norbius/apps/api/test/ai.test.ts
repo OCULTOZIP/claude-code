@@ -86,6 +86,12 @@ describe("chat", () => {
     expect(list.items).toHaveLength(1);
     expect(list.items[0]).toMatchObject({ amountCents: 5000, source: "ai", description: "Mercado" });
 
+    // Histórico: a resposta volta como um único item (cartão + texto).
+    const convId = ev[0]!.id as string;
+    const hist = (await client.get(`/api/v1/ai/conversations/${convId}`)).json();
+    expect(hist.items).toHaveLength(2);
+    expect(hist.items[1]).toMatchObject({ role: "assistant", text: "Registrei R$ 50,00 em Alimentação na conta Nubank.", cards: [{ kind: "created" }] });
+
     // Desfazer pelo caminho do cartão.
     expect((await client.request({ method: "DELETE", url: card.undo.path })).statusCode).toBe(204);
     expect((await client.get("/api/v1/transactions")).json().total).toBe(0);

@@ -30,7 +30,7 @@ export type ChatEvent =
   | { type: "done" };
 
 /** Definições de tools para a API (JSON Schema gerado do mesmo Zod que valida). */
-function toolDefinitions(): Anthropic.Beta.BetaTool[] {
+export function toolDefinitions(): Anthropic.Beta.BetaTool[] {
   return TOOLS.map((t) => {
     const { $schema: _s, ...inputSchema } = z.toJSONSchema(t.schema, { io: "input" }) as Record<string, unknown>;
     return {
@@ -102,7 +102,17 @@ export class AiOrchestrator {
         if (r.kind === "tool_results" && cards.length) return [{ role: "assistant", text: "", cards }];
         return [];
       });
-      return { id: c.id, title: c.title, items };
+      // Uma resposta pode ocupar vários registros (tool_use → resultados → texto):
+      // junta itens consecutivos do NORBIUS num só, como aparecem ao vivo.
+      const merged: Item[] = [];
+      for (const it of items) {
+        const prev = merged.at(-1);
+        if (prev && prev.role === "assistant" && it.role === "assistant") {
+          prev.cards.push(...it.cards);
+          prev.text = [prev.text, it.text].filter(Boolean).join("\n\n");
+        } else merged.push({ ...it, cards: [...it.cards] });
+      }
+      return { id: c.id, title: c.title, items: merged };
     });
   }
 

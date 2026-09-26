@@ -7,6 +7,9 @@ export const OUTBOX_DIR = process.env.E2E_OUTBOX_DIR ?? join(tmpdir(), "norbius-
 const WEB_URL = "http://localhost:3100";
 const API_PORT = "4100";
 
+// SSR do web se identifica para a API (rate limit por sessão, não pelo IP do servidor).
+const INTERNAL_API_SECRET = "e2e-internal-secret-with-32-characters!";
+
 const apiEnv = {
   APP_ENV: "test",
   APP_URL: WEB_URL,
@@ -14,7 +17,10 @@ const apiEnv = {
   DATABASE_URL: process.env.DATABASE_URL ?? "postgres://norbius_app:norbius_app@localhost:5432/norbius",
   BETTER_AUTH_SECRET: "e2e-secret-with-at-least-32-characters!!",
   AUTH_RATE_LIMIT_ENABLED: "false",
+  INTERNAL_API_SECRET,
   MAIL_OUTBOX_DIR: OUTBOX_DIR,
+  // Dublê determinístico do LLM (só permitido com APP_ENV=test).
+  AI_E2E_DOUBLE: "1",
   LOG_LEVEL: "warn",
 };
 
@@ -48,7 +54,7 @@ export default defineConfig({
     {
       command: "pnpm exec next start --port 3100",
       url: WEB_URL,
-      env: { API_URL: `http://localhost:${API_PORT}`, APP_URL: WEB_URL },
+      env: { API_URL: `http://localhost:${API_PORT}`, APP_URL: WEB_URL, INTERNAL_API_SECRET },
       reuseExistingServer: false,
       timeout: 60_000,
     },

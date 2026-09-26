@@ -17,18 +17,18 @@ describe("loadEnv", () => {
 
   it("exige e-mail real, Redis e https em produção", () => {
     expect(() => loadEnv({ ...base, APP_ENV: "production", APP_URL: "http://x" })).toThrow(
-      /RESEND_API_KEY[\s\S]*REDIS_URL[\s\S]*https/,
+      /RESEND_API_KEY[\s\S]*REDIS_URL[\s\S]*INTERNAL_API_SECRET[\s\S]*https/,
     );
   });
 
   it("proíbe a caixa de saída em arquivo em produção", () => {
     expect(() =>
-      loadEnv({ ...base, APP_ENV: "production", RESEND_API_KEY: "k", REDIS_URL: "redis://r:6379", MAIL_OUTBOX_DIR: "/tmp/x" }),
+      loadEnv({ ...base, APP_ENV: "production", RESEND_API_KEY: "k", REDIS_URL: "redis://r:6379", INTERNAL_API_SECRET: "s".repeat(32), MAIL_OUTBOX_DIR: "/tmp/x" }),
     ).toThrow(/MAIL_OUTBOX_DIR/);
   });
 
   it("liga HIBP por padrão em produção", () => {
-    const env = loadEnv({ ...base, APP_ENV: "production", RESEND_API_KEY: "k", REDIS_URL: "redis://r:6379" });
+    const env = loadEnv({ ...base, APP_ENV: "production", RESEND_API_KEY: "k", REDIS_URL: "redis://r:6379", INTERNAL_API_SECRET: "s".repeat(32) });
     expect(env.HIBP_ENABLED).toBe(true);
   });
 
@@ -39,6 +39,11 @@ describe("loadEnv", () => {
   it("trata variáveis vazias como não definidas", () => {
     const env = loadEnv({ ...base, GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "", RESEND_API_KEY: "" });
     expect(env.googleEnabled).toBe(false);
+  });
+
+  it("proíbe o dublê de LLM fora de testes", () => {
+    expect(() => loadEnv({ ...base, APP_ENV: "development", AI_E2E_DOUBLE: "1" })).toThrow(/AI_E2E_DOUBLE/);
+    expect(loadEnv({ ...base, APP_ENV: "test", AI_E2E_DOUBLE: "1" }).AI_E2E_DOUBLE).toBe("1");
   });
 
   it("rejeita segredo curto", () => {

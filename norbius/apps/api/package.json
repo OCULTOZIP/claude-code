@@ -8,7 +8,8 @@
     "build": "tsup",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "eval:ai": "tsx --env-file-if-exists=../../.env evals/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",

@@ -2,14 +2,15 @@
 
 > Seu dinheiro. Uma inteligência trabalhando por você.
 
-Sistema de inteligência financeira pessoal (SaaS, pt-BR). Arquitetura completa em [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md). Decisões: [fundação](docs/adr/0001-fundacao.md) · [núcleo financeiro](docs/adr/0002-nucleo-financeiro.md).
+Sistema de inteligência financeira pessoal (SaaS, pt-BR). Arquitetura completa em [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md). Decisões: [fundação](docs/adr/0001-fundacao.md) · [núcleo financeiro](docs/adr/0002-nucleo-financeiro.md) · [NORBIUS AI](docs/adr/0003-norbius-ai.md).
 
-**Status:** Fase 2 — Financial Core concluída.
+**Status:** Fase 3 — NORBIUS AI concluída.
 
 | Fase | Entregue |
 |---|---|
 | 1 · Foundation | Monorepo, banco com RLS, autenticação completa, design system, site, área logada |
 | 2 · Financial Core | Onboarding conversacional, contas, transações, transferências, categorias, contas fixas/recorrências, cartões (parcelas, faturas, pagamento), metas, painel com dados reais, exportação CSV |
+| 3 · NORBIUS AI | Assistente conversacional (Claude) com streaming: consultas com dados reais, registro por linguagem natural com Desfazer, ações sensíveis com confirmação, memórias explícitas, cota mensal, avaliação |
 
 ## Estrutura
 
@@ -40,12 +41,15 @@ pnpm dev                        # web em :3000, API em :4000
 
 Sem `RESEND_API_KEY`, os e-mails (verificação, redefinição de senha) aparecem no log da API.
 
+O assistente NORBIUS precisa de `ANTHROPIC_API_KEY` (modelo em `AI_MODEL`, padrão `claude-opus-5`). Sem a chave, a tela `/norbius` informa que o assistente não está ativo e o resto do app funciona normalmente.
+
 ## Testes
 
 ```bash
 pnpm typecheck
 pnpm test                                          # unitários + integração (Postgres real) + isolamento RLS
 API_URL=http://localhost:4100 pnpm --filter @norbius/web build && pnpm test:e2e   # Playwright
+ANTHROPIC_API_KEY=... pnpm --filter @norbius/api eval:ai   # avaliação do modelo real (tem custo)
 ```
 
 ## Regras do projeto
@@ -57,3 +61,4 @@ API_URL=http://localhost:4100 pnpm --filter @norbius/web build && pnpm test:e2e 
 - Nenhum dado mockado apresentado como real; nenhum botão sem função.
 - Valores monetários em centavos (`bigint`), nunca `float`.
 - Nova tabela = privilégios concedidos explicitamente na migração.
+- A IA nunca calcula nem inventa valores: todo número vem de uma tool; alterar, excluir e transferir exigem confirmação do usuário (ADR 0003).

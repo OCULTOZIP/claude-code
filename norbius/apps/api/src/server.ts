@@ -15,7 +15,9 @@ const mailer: Mailer = env.RESEND_API_KEY
     ? new FileMailer(env.MAIL_OUTBOX_DIR)
     : new ConsoleMailer(log);
 
-const app = await buildApp({ env, db, mailer, log, redis });
+// Dublê do LLM só existe em E2E (APP_ENV=test, validado em loadEnv).
+const llm = env.AI_E2E_DOUBLE ? new (await import("./testing/e2e-llm")).E2eLlm() : undefined;
+const app = await buildApp({ env, db, mailer, log, redis, llm });
 
 const shutdown = async (signal: string) => {
   log.info({ signal }, "encerrando");

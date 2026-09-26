@@ -5,7 +5,7 @@ import { brl, monthLabel, relativeDay, signedBrl } from "@/lib/format";
 import { firstName, greeting } from "@/lib/greeting";
 import { apiGet, getMe } from "@/lib/server-api";
 import type { DashboardSummary } from "@norbius/contracts";
-import { Badge, Card, CardBody, CardHeader, CardTitle, cn, NorbiusCore, Progress } from "@norbius/ui";
+import { Badge, buttonClasses, Card, CardBody, CardHeader, CardTitle, cn, NorbiusCore, Progress } from "@norbius/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -79,6 +79,9 @@ export default async function DashboardPage() {
             <NorbiusCore state={s.core.state} size={132} />
             <p className="mt-5 font-mono text-xs tracking-[0.3em]">{s.core.state}</p>
             <p className="mt-2 text-sm leading-relaxed text-fg-secondary">{s.core.reason}</p>
+            <Link href="/norbius" className={buttonClasses({ variant: "secondary", size: "sm", className: "mt-5" })}>
+              Falar com o NORBIUS
+            </Link>
           </div>
         </Card>
       </div>

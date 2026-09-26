@@ -4,6 +4,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 const API_URL = process.env.API_URL ?? "http://localhost:4000";
+const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET;
 
 export class ApiRequestError extends Error {
   constructor(readonly status: number) {
@@ -18,6 +19,8 @@ async function apiFetch<T>(path: string): Promise<T> {
     headers: {
       cookie: cookieStore.toString(),
       "x-request-id": h.get("x-request-id") ?? crypto.randomUUID(),
+      // Identifica o SSR para a API limitar por sessão, não pelo IP deste servidor.
+      ...(INTERNAL_API_SECRET ? { "x-norbius-internal": INTERNAL_API_SECRET } : {}),
     },
     cache: "no-store",
   });
@@ -40,6 +43,9 @@ export async function apiGet<T>(path: string): Promise<T> {
 
 /** Usuário autenticado ou `null` se a sessão for inválida. */
 export async function getMe(): Promise<Me | null> {
+  // Sem cookie de sessão não há o que perguntar à API (e o visitante anônimo não consome o limite do SSR).
+  const cookieStore = await cookies();
+  if (!cookieStore.getAll().some((c) => c.name.endsWith("norbius.session_token"))) return null;
   try {
     return await apiFetch<Me>("/api/v1/me");
   } catch (err) {

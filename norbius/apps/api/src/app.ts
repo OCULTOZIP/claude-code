@@ -8,6 +8,7 @@ import type { Env } from "./env";
 import { AuditLogger } from "./lib/audit";
 import { createAuth } from "./lib/auth";
 import type { Mailer } from "./lib/mailer";
+import { rateLimitKey } from "./lib/rate-limit-key";
 import { registerAiRoutes } from "./modules/ai/ai.routes";
 import { AnthropicLlm, type LlmClient } from "./modules/ai/llm";
 import { MemoriesService } from "./modules/ai/memories.service";
@@ -64,6 +65,7 @@ export async function buildApp({ env, db, mailer, log, redis, llm }: AppDeps) {
     global: true,
     max: 300,
     timeWindow: "1 minute",
+    keyGenerator: (req) => rateLimitKey(req, env.INTERNAL_API_SECRET),
     ...(redis ? { redis, nameSpace: "norbius:rl:" } : {}),
   });
 

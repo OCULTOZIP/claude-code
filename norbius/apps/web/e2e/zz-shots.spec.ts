@@ -72,3 +72,20 @@ test("capturas", async ({ page }) => {
     await page.screenshot({ path: `${DIR}/${name}.png`, fullPage: true });
   }
 });
+
+test("capturas do chat", async ({ page }) => {
+  await verifiedUser(page, "shotschat");
+  await skipOnboarding(page);
+  await createAccount(page, "Corrente", "3.000");
+  await createAccount(page, "Reserva", "0");
+  await page.goto("/norbius");
+  await page.screenshot({ path: `${DIR}/chat-vazio.png` });
+  const input = page.getByLabel("Mensagem para o NORBIUS");
+  await input.fill("Gastei 50 no mercado");
+  await input.press("Enter");
+  await expect(page.getByText("Registrei R$ 50,00 em Alimentação.")).toBeVisible();
+  await input.fill("transfere 200 para a reserva");
+  await input.press("Enter");
+  await expect(page.getByText("Confirmar transferência")).toBeVisible();
+  await page.screenshot({ path: `${DIR}/chat.png` });
+});

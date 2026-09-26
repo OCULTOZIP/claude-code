@@ -22,6 +22,8 @@ const schema = z
     AUTH_RATE_LIMIT_ENABLED: bool(true),
     HIBP_ENABLED: z.enum(["true", "false", "1", "0"]).optional(),
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(1),
+    /** Segredo compartilhado com o SSR do web: limita chamadas internas por sessão, não pelo IP do servidor. */
+    INTERNAL_API_SECRET: z.string().min(32, "INTERNAL_API_SECRET precisa ter pelo menos 32 caracteres").optional(),
     /** Só dev/test: grava e-mails como JSON neste diretório (usado pelos testes E2E). */
     MAIL_OUTBOX_DIR: z.string().min(1).optional(),
     /** NORBIUS AI. Sem chave, o assistente fica indisponível (nunca simulado). */
@@ -29,6 +31,8 @@ const schema = z
     AI_MODEL: z.string().min(1).default("claude-opus-5"),
     AI_EFFORT: z.enum(["low", "medium", "high", "xhigh", "max"]).optional(),
     AI_MONTHLY_MESSAGE_LIMIT: z.coerce.number().int().min(0).default(100),
+    /** Somente E2E: dublê determinístico do LLM (proibido fora de APP_ENV=test). */
+    AI_E2E_DOUBLE: z.enum(["1"]).optional(),
     AI_MAX_TOOL_ITERATIONS: z.coerce.number().int().min(1).max(12).default(6),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   })
@@ -42,6 +46,12 @@ const schema = z
     }
     if (deployed && !env.REDIS_URL) {
       ctx.addIssue({ code: "custom", message: "REDIS_URL é obrigatória em staging/produção (rate limit distribuído)." });
+    }
+    if (deployed && !env.INTERNAL_API_SECRET) {
+      ctx.addIssue({ code: "custom", message: "INTERNAL_API_SECRET é obrigatória em staging/produção (rate limit do SSR)." });
+    }
+    if (env.AI_E2E_DOUBLE && env.APP_ENV !== "test") {
+      ctx.addIssue({ code: "custom", message: "AI_E2E_DOUBLE só pode ser usado com APP_ENV=test." });
     }
     if (deployed && env.MAIL_OUTBOX_DIR) {
       ctx.addIssue({ code: "custom", message: "MAIL_OUTBOX_DIR não pode ser usado em staging/produção." });
