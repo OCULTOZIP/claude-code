@@ -1,0 +1,76 @@
+/*
+ * NORBIUS — tokens do design system.
+ * Preto domina; vermelho é identidade e é usado com estratégia:
+ * ações principais, estados importantes, inteligência, alertas e foco.
+ */
+@theme {
+  --color-bg: #050505;
+  --color-surface: #0b0b0d;
+  --color-card: #121214;
+  --color-secondary: #1a1a1d;
+  --color-line: #1f1f23;
+  --color-line-strong: #2a2a2f;
+
+  --color-primary: #e50914;
+  --color-primary-light: #ff1a25;
+  --color-primary-dark: #8f0008;
+
+  --color-fg: #ffffff;
+  --color-fg-secondary: #a1a1aa;
+  --color-fg-muted: #66666d;
+
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-card: 1.25rem;
+
+  --animate-core-pulse: core-pulse 4s ease-in-out infinite;
+  --animate-core-spin: core-spin 1.6s linear infinite;
+  --animate-fade-up: fade-up 0.5s ease-out both;
+
+  @keyframes core-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.55; }
+    50% { transform: scale(1.06); opacity: 0.9; }
+  }
+  @keyframes core-spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background: var(--color-bg);
+    font-family: var(--font-sans);
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,30 @@
+import { createDatabase } from "@norbius/db";
+import { createLogger } from "@norbius/observability";
+import { Redis } from "ioredis";
+import { buildApp } from "./app";
+import { loadEnv } from "./env";
+import { ConsoleMailer, FileMailer, ResendMailer, type Mailer } from "./lib/mailer";
+
+const env = loadEnv();
+const log = createLogger({ service: "api", level: env.LOG_LEVEL });
+const { db, close } = createDatabase(env.DATABASE_URL);
+const redis = env.REDIS_URL ? new Redis(env.REDIS_URL, { maxRetriesPerRequest: 2, lazyConnect: false }) : null;
+const mailer: Mailer = env.RESEND_API_KEY
+  ? new ResendMailer(env.RESEND_API_KEY, env.EMAIL_FROM)
+  : env.MAIL_OUTBOX_DIR
+    ? new FileMailer(env.MAIL_OUTBOX_DIR)
+    : new ConsoleMailer(log);
+
+const app = await buildApp({ env, db, mailer, log, redis });
+
+const shutdown = async (signal: string) => {
+  log.info({ signal }, "encerrando");
+  await app.close();
+  await close();
+  redis?.disconnect();
+  process.exit(0);
+};
+process.on("SIGTERM", () => void shutdown("SIGTERM"));
+process.on("SIGINT", () => void shutdown("SIGINT"));
+
+await app.listen({ host: env.HOST, port: env.PORT });

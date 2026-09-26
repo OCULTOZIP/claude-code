@@ -125,7 +125,7 @@
 |---|---|---|
 | Linguagem | **TypeScript** (strict) ponta a ponta | Um só idioma de tipos entre front, API, worker e validação; schemas Zod compartilhados. |
 | Monorepo | **pnpm workspaces + Turborepo** | Apps separados (web/api/worker/admin) com pacotes compartilhados, cache de build no CI. |
-| Frontend | **Next.js 15 (App Router) + React 19** | SSG para marketing (SEO), RSC para a área logada, streaming de UI. Atua como BFF: faz proxy de `/api/*` para a API (mesma origem → cookies `SameSite=Lax`, sem CORS). |
+| Frontend | **Next.js 16 (App Router) + React 19** (atualizado na Fase 1, ver ADR 0001) | SSG para marketing (SEO), RSC para a área logada, streaming de UI. Atua como BFF: faz proxy de `/api/*` para a API (mesma origem → cookies `SameSite=Lax`, sem CORS). |
 | UI | **Tailwind CSS v4 + Radix UI primitives (via shadcn/ui, totalmente re-temado)** + **Motion** (Framer Motion) | Componentes acessíveis sem herdar visual genérico; tokens próprios do NORBIUS; microinterações do NORBIUS CORE. |
 | Gráficos | **visx** (ou Recharts para gráficos simples) | Controle fino de estética premium (fluxo, categorias, projeção com banda de incerteza). |
 | Estado/dados no cliente | **TanStack Query** | Cache, invalidação após mutações, *optimistic updates* com rollback. |
