@@ -64,6 +64,20 @@
       "when": 1790439450525,
       "tag": "0008_billing_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790451268106,
+      "tag": "0009_intelligence",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790451272421,
+      "tag": "0010_intelligence_grants",
+      "breakpoints": true
     }
   ]
 }

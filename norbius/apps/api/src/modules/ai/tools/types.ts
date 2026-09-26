@@ -6,6 +6,7 @@ import type { CardsService } from "../../cards/cards.service";
 import type { CategoriesService } from "../../categories/categories.service";
 import type { DashboardService } from "../../dashboard/dashboard.service";
 import type { GoalsService } from "../../goals/goals.service";
+import type { IntelligenceService } from "../../intelligence/intelligence.service";
 import type { RecurringService } from "../../recurring/recurring.service";
 import type { TransactionsService } from "../../transactions/transactions.service";
 import type { MemoriesService } from "../memories.service";
@@ -18,6 +19,7 @@ export type Services = {
   goals: GoalsService;
   recurring: RecurringService;
   dashboard: DashboardService;
+  intelligence: IntelligenceService;
   memories: MemoriesService;
   audit: AuditLogger;
   billing: BillingService;

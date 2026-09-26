@@ -1,4 +1,5 @@
 import type { CoreState } from "./core";
+import type { IntelligenceSummary } from "./intelligence";
 
 export type Figure = { cents: number; kind: "actual" | "estimate" };
 
@@ -38,4 +39,6 @@ export type DashboardSummary = {
   /** Fluxo diário do mês: receitas e despesas por dia (reais). */
   dailyFlow: { date: string; incomeCents: number; expenseCents: number }[];
   core: { state: CoreState; reason: string; historyDays: number };
+  /** Inteligência (Fase 4): alertas, projeção e "quanto posso gastar?". */
+  intelligence: IntelligenceSummary;
 };

@@ -43,8 +43,10 @@ export const CASES: EvalCase[] = [
   { id: "q-goals", utterance: "Como estão minhas metas?", tool: ["get_goals"] },
   { id: "q-uber", utterance: "Quanto gastei de Uber em agosto?", tool: ["search_transactions", "get_spending_by_category"] },
   { id: "q-last", utterance: "Quais foram meus últimos gastos?", tool: ["search_transactions"] },
-  { id: "q-week", utterance: "Quanto posso gastar essa semana?", tool: ["get_financial_overview", "list_upcoming_bills"] },
-  { id: "q-leftover", utterance: "Quanto vai sobrar no final do mês?", tool: ["get_financial_overview", "list_upcoming_bills"] },
+  { id: "q-week", utterance: "Quanto posso gastar essa semana?", tool: ["get_cash_projection"] },
+  { id: "q-leftover", utterance: "Quanto vai sobrar no final do mês?", tool: ["get_cash_projection"] },
+  { id: "q-negative", utterance: "Meu saldo vai ficar negativo esse mês?", tool: ["get_cash_projection"] },
+  { id: "q-alerts", utterance: "Tem algo que eu deveria saber sobre minhas finanças?", tool: ["list_insights"] },
 
   // Ações que exigem confirmação
   { id: "transfer", utterance: "Transfere 200 do Nubank pra Reserva", tool: ["create_transfer"], args: { amount: 200, from_account: "Nubank", to_account: "Reserva" } },

@@ -1,7 +1,9 @@
 import { FlowChart } from "@/components/dashboard/flow-chart";
+import { InsightsList } from "@/components/dashboard/insights-list";
+import { ProjectionChart } from "@/components/dashboard/projection-chart";
 import { RegisterButton } from "@/components/dashboard/register-button";
 import { dialogData } from "@/lib/finance-data";
-import { brl, monthLabel, relativeDay, signedBrl } from "@/lib/format";
+import { brl, monthLabel, relativeDay, shortDate, signedBrl } from "@/lib/format";
 import { firstName, greeting } from "@/lib/greeting";
 import { apiGet, getMe } from "@/lib/server-api";
 import type { DashboardSummary } from "@norbius/contracts";
@@ -42,6 +44,8 @@ export default async function DashboardPage() {
   const s = await apiGet<DashboardSummary>("/api/v1/dashboard/summary");
   const data = await dialogData(s.today);
   const name = firstName(me.profile.displayName ?? me.user.name);
+  const intel = s.intelligence;
+  const sts = intel.safeToSpend;
 
   return (
     <div className="flex flex-col gap-6">
@@ -79,6 +83,34 @@ export default async function DashboardPage() {
             <NorbiusCore state={s.core.state} size={132} />
             <p className="mt-5 font-mono text-xs tracking-[0.3em]">{s.core.state}</p>
             <p className="mt-2 text-sm leading-relaxed text-fg-secondary">{s.core.reason}</p>
+            {sts ? (
+              <div className="mt-5 w-full rounded-xl border border-line bg-secondary/40 px-4 py-3 text-left">
+                <p className="text-xs text-fg-muted">Quanto posso gastar · estimativa</p>
+                {sts.perDayCents > 0 ? (
+                  <>
+                    <p className="mt-1 text-xl font-semibold tabular">
+                      {brl(sts.perDayCents)}
+                      <span className="text-sm font-normal text-fg-secondary"> por dia</span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-fg-secondary tabular">
+                      {brl(sts.perWeekCents)} por semana · até {shortDate(sts.until)}
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-1 text-sm text-fg-secondary">
+                    Os compromissos até {shortDate(sts.until)} já consomem o saldo. Evite gastos extras por enquanto.
+                  </p>
+                )}
+                <details className="mt-2 text-xs text-fg-secondary">
+                  <summary className="cursor-pointer text-fg-muted hover:text-fg">Premissas</summary>
+                  <ul className="mt-1.5 flex list-disc flex-col gap-1 pl-4">
+                    {sts.assumptions.map((a) => (
+                      <li key={a}>{a}</li>
+                    ))}
+                  </ul>
+                </details>
+              </div>
+            ) : null}
             <Link href="/norbius" className={buttonClasses({ variant: "secondary", size: "sm", className: "mt-5" })}>
               Falar com o NORBIUS
             </Link>
@@ -94,6 +126,29 @@ export default async function DashboardPage() {
           <FlowChart days={s.dailyFlow} today={s.today} />
         </CardBody>
       </Card>
+
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <Card>
+          <CardHeader>
+            <CardTitle>Projeção de saldo · próximos 30 dias</CardTitle>
+          </CardHeader>
+          <CardBody>
+            {intel.projection ? (
+              <ProjectionChart projection={intel.projection} today={s.today} balanceCents={s.availableBalance.cents} />
+            ) : (
+              <p className="text-sm text-fg-muted">{intel.projectionUnavailable}</p>
+            )}
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Alertas{intel.insights.length ? ` · ${intel.insights.length}` : ""}</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <InsightsList insights={intel.insights} />
+          </CardBody>
+        </Card>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card>

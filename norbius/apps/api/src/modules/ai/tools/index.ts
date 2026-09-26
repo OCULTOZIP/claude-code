@@ -289,6 +289,68 @@ const listUpcomingBills = defineTool({
   },
 });
 
+const getCashProjection = defineTool({
+  name: "get_cash_projection",
+  description:
+    "Projeção do saldo para os próximos 30 dias (faixa p10/p50/p90) e 'quanto posso gastar' até a próxima receita (por dia e por semana). Use para 'quanto posso gastar?', 'vou fechar o mês no azul?', 'meu saldo vai ficar negativo?'. Tudo aqui é ESTIMATIVA: diga isso, cite o nível de confiança e as premissas principais. Se available=false, explique o motivo e não chute números.",
+  schema: z.object({}),
+  mode: "read",
+  run: async (ctx) => {
+    const s = await ctx.services.intelligence.summary(ctx.userId);
+    if (!s.projection || !s.safeToSpend) return { result: { available: false, reason: s.projectionUnavailable } };
+    const p = s.projection;
+    const sts = s.safeToSpend;
+    const pick = (date: string) => p.days.find((d) => d.date === date);
+    const end = p.days.at(-1)!;
+    return {
+      result: {
+        available: true,
+        kind: "estimate",
+        as_of: s.today,
+        confidence: p.confidence,
+        safe_to_spend: {
+          until: sts.until,
+          basis: sts.basis === "next_income" ? "até a véspera da próxima receita" : "até o fim do mês",
+          total_available: brl(sts.availableCents),
+          per_day: brl(sts.perDayCents),
+          per_week: brl(sts.perWeekCents),
+          assumptions: sts.assumptions,
+        },
+        projection: {
+          horizon_end: p.horizonEnd,
+          end_balance: { likely: brl(end.p50), pessimistic: brl(end.p10), optimistic: brl(end.p90) },
+          lowest_likely_balance: p.lowest ? { date: p.lowest.date, value: brl(p.lowest.cents) } : null,
+          month_end_likely: (() => {
+            const d = pick(monthRange(monthOf(s.today)).end);
+            return d ? brl(d.p50) : null;
+          })(),
+          daily_variable_spending: brl(p.dailyVariableCents),
+          assumptions: p.assumptions,
+        },
+      },
+    };
+  },
+});
+
+const listInsights = defineTool({
+  name: "list_insights",
+  description:
+    "Alertas e oportunidades abertos detectados pelo NORBIUS (contas vencendo, limite do cartão, gasto fora do padrão, categoria em alta, metas fora do ritmo, saldo projetado negativo etc.), do mais grave ao menos grave, com o estado do NORBIUS CORE. Os textos já vêm com os números corretos: repita-os, não recalcule.",
+  schema: z.object({}),
+  mode: "read",
+  run: async (ctx) => {
+    const s = await ctx.services.intelligence.summary(ctx.userId);
+    return {
+      result: {
+        as_of: s.today,
+        core_state: s.core.state,
+        core_reason: s.core.reason,
+        insights: s.insights.map((i) => ({ severity: i.severity, title: i.title, detail: i.body })),
+      },
+    };
+  },
+});
+
 const getCreditCards = defineTool({
   name: "get_credit_cards",
   description: "Cartões de crédito: limite, limite usado (inclui parcelas futuras), disponível, fechamento, vencimento e fatura atual.",
@@ -670,6 +732,8 @@ export const TOOLS: ToolDef[] = [
   getSpendingByCategory,
   comparePeriods,
   listUpcomingBills,
+  getCashProjection,
+  listInsights,
   getCreditCards,
   getGoals,
   createTransaction,

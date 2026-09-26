@@ -31,6 +31,8 @@ import { CategoriesService } from "./modules/categories/categories.service";
 import { registerDashboardRoutes } from "./modules/dashboard/dashboard.routes";
 import { DashboardService } from "./modules/dashboard/dashboard.service";
 import { registerGoalRoutes } from "./modules/goals/goals.routes";
+import { registerIntelligenceRoutes } from "./modules/intelligence/intelligence.routes";
+import { IntelligenceService } from "./modules/intelligence/intelligence.service";
 import { GoalsService } from "./modules/goals/goals.service";
 import { registerOnboardingRoutes } from "./modules/onboarding/onboarding.routes";
 import { OnboardingService } from "./modules/onboarding/onboarding.service";
@@ -120,7 +122,10 @@ export async function buildApp({ env, db, mailer, log, redis, llm, billingProvid
   registerGoalRoutes(app, goals, requireUser);
   registerOnboardingRoutes(app, new OnboardingService(db, accountsRepo, cards, recurring, goals, audit), requireUser);
   const dashboard = new DashboardService(db, accountsRepo, cardsRepo, cards, goals);
+  const intelligence = new IntelligenceService(db, accountsRepo, cards, goals, dashboard, billing);
+  dashboard.attachIntelligence(intelligence);
   registerDashboardRoutes(app, dashboard, requireUser);
+  registerIntelligenceRoutes(app, intelligence, requireUser);
 
   // NORBIUS AI: sem chave configurada o assistente fica indisponível (nunca simulado).
   const memories = new MemoriesService(db);
@@ -128,7 +133,7 @@ export async function buildApp({ env, db, mailer, log, redis, llm, billingProvid
   const ai = new AiOrchestrator(
     db,
     llmClient,
-    { accounts: accountsService, categories, transactions, cards, goals, recurring, dashboard, memories, audit, billing },
+    { accounts: accountsService, categories, transactions, cards, goals, recurring, dashboard, intelligence, memories, audit, billing },
     env,
     log,
   );

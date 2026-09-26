@@ -2,15 +2,16 @@
 
 > Seu dinheiro. Uma inteligência trabalhando por você.
 
-Sistema de inteligência financeira pessoal (SaaS, pt-BR). Arquitetura completa em [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md). Decisões: [fundação](docs/adr/0001-fundacao.md) · [núcleo financeiro](docs/adr/0002-nucleo-financeiro.md) · [NORBIUS AI](docs/adr/0003-norbius-ai.md) · [assinaturas](docs/adr/0004-assinaturas.md).
+Sistema de inteligência financeira pessoal (SaaS, pt-BR). Arquitetura completa em [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md). Decisões: [fundação](docs/adr/0001-fundacao.md) · [núcleo financeiro](docs/adr/0002-nucleo-financeiro.md) · [NORBIUS AI](docs/adr/0003-norbius-ai.md) · [assinaturas](docs/adr/0004-assinaturas.md) · [inteligência financeira](docs/adr/0005-inteligencia-financeira.md).
 
-**Status:** Fase 6 — Assinaturas concluída. A Fase 6 foi antecipada a pedido do dono do produto; as Fases 4 (inteligência), 5 (experiência premium) e 7 (admin) ainda não foram iniciadas.
+**Status:** Fase 4 (inteligência financeira) — parte 1 concluída; a parte 2 (notificações e execução agendada) vem a seguir. A Fase 6 foi antecipada a pedido do dono do produto; as Fases 5 (experiência premium) e 7 (admin) ainda não foram iniciadas.
 
 | Fase | Entregue |
 |---|---|
 | 1 · Foundation | Monorepo, banco com RLS, autenticação completa, design system, site, área logada |
 | 2 · Financial Core | Onboarding conversacional, contas, transações, transferências, categorias, contas fixas/recorrências, cartões (parcelas, faturas, pagamento), metas, painel com dados reais, exportação CSV |
-| 3 · NORBIUS AI | Assistente conversacional (Claude) com streaming: consultas com dados reais, registro por linguagem natural com Desfazer, ações sensíveis com confirmação, memórias explícitas, cota mensal, avaliação |
+| 3 · NORBIUS AI | Assistente conversacional (Claude) com streaming: consultas com dados reais, registro por linguagem natural com Desfazer, ações sensíveis com confirmação, memórias explícitas, cota mensal, avaliação; modo voz (ditado, respostas faladas, ligação com voz neural local opcional) |
+| 4 · Inteligência (parte 1) | Projeção de saldo p10/p50/p90 com premissas, "quanto posso gastar" até a próxima receita, 11 detectores de insights com evidência, estado real do NORBIUS CORE, alertas no painel e no assistente |
 | 6 · SaaS | Planos Grátis/Pro (R$ 14,90/mês ou R$ 149/ano), teste de 7 dias sem cartão, assinatura via Asaas (Pix, boleto, cartão), webhook idempotente, limites por plano, cancelamento, histórico de cobranças |
 
 ## Estrutura
@@ -21,6 +22,7 @@ apps/
   web/      Next.js 16 — marketing, autenticação e área logada (BFF: /api/* → API)
 packages/
   domain/         regras puras: dinheiro pt-BR, datas, parcelas, faturas, recorrências
+  intelligence/   regras puras da Fase 4: projeção, safe-to-spend, detectores, estado do CORE
   db/             schema Drizzle, migrações SQL, RLS, withUserContext, qualified()
   contracts/      schemas Zod compartilhados entre web e API
   ui/             design system NORBIUS (tokens, componentes, NORBIUS CORE)

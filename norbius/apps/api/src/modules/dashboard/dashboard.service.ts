@@ -7,6 +7,7 @@ import type { AccountsRepository } from "../accounts/accounts.repository";
 import type { CardsRepository } from "../cards/cards.repository";
 import type { CardsService } from "../cards/cards.service";
 import type { GoalsService } from "../goals/goals.service";
+import type { IntelligenceService } from "../intelligence/intelligence.service";
 import { pendingDate, ruleOf } from "../recurring/recurring.service";
 
 const t = schema.transactions;
@@ -26,8 +27,17 @@ export class DashboardService {
     private readonly goals: GoalsService,
   ) {}
 
+  private intelligence: IntelligenceService | null = null;
+
+  /** A inteligência depende do painel (compromissos, histórico); a ligação é feita depois de construir os dois. */
+  attachIntelligence(intelligence: IntelligenceService) {
+    this.intelligence = intelligence;
+  }
+
   async summary(userId: string): Promise<DashboardSummary> {
     const cards = await this.cards.list(userId);
+    if (!this.intelligence) throw new Error("DashboardService sem IntelligenceService");
+    const intelligence = await this.intelligence.summary(userId);
     return withUserContext(this.db, userId, async (tx) => {
       const today = await userToday(tx);
       const month = monthOf(today);
@@ -58,14 +68,7 @@ export class DashboardService {
       const commitments = await this.commitments(tx, today);
       const goals = (await this.goals.listInTx(tx)).filter((g) => g.status === "active").slice(0, 4);
 
-      const [first] = await tx
-        .select({
-          d: sql<string | null>`least(
-            (select min(${q(t.date)}) from ${t} where ${q(t.deletedAt)} is null),
-            (select min(${q(p.purchaseDate)}) from ${p} where ${q(p.deletedAt)} is null))`,
-        })
-        .from(sql`(select 1) as one`);
-      const historyDays = first?.d ? Math.max(0, diffDays(today, first.d) + 1) : 0;
+      const historyDays = await this.historyDays(tx, today);
       const hasMovements = historyDays > 0;
 
       return {
@@ -89,18 +92,22 @@ export class DashboardService {
         })),
         cards: cards.map((c) => ({ id: c.id, name: c.name, usedLimitCents: c.usedLimitCents, limitCents: c.limitCents })),
         dailyFlow,
-        // Fase 2: sem motor de insights ainda — o CORE só afirma o que sabe.
-        core: {
-          state: "ACTIVE",
-          historyDays,
-          reason: !accounts.length
-            ? "Sistema ativo. Cadastre suas contas para começar."
-            : !hasMovements
-              ? "Sistema ativo. Ainda não há movimentações para analisar."
-              : `Sistema ativo. ${historyDays} ${historyDays === 1 ? "dia" : "dias"} de histórico registrado — a análise de padrões chega com mais dados.`,
-        },
+        core: { state: intelligence.core.state, reason: intelligence.core.reason, historyDays },
+        intelligence,
       };
     });
+  }
+
+  /** Dias desde o primeiro lançamento (conta ou cartão), inclusive hoje; 0 sem lançamentos. */
+  async historyDays(tx: Transaction, today: string): Promise<number> {
+    const [first] = await tx
+      .select({
+        d: sql<string | null>`least(
+          (select min(${q(t.date)}) from ${t} where ${q(t.deletedAt)} is null),
+          (select min(${q(p.purchaseDate)}) from ${p} where ${q(p.deletedAt)} is null))`,
+      })
+      .from(sql`(select 1) as one`);
+    return first?.d ? Math.max(0, diffDays(today, first.d) + 1) : 0;
   }
 
   /** Despesas por categoria no intervalo (contas + parcelas de cartão por competência). */

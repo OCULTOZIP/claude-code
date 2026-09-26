@@ -6,3 +6,4 @@ export * from "./finance";
 export * from "./me";
 export * from "./onboarding";
 export * from "./billing";
+export * from "./intelligence";
