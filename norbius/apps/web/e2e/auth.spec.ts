@@ -74,6 +74,9 @@ test("recuperação de senha pelo e-mail", async ({ page }) => {
 
   await page.goto("/entrar");
   await page.getByRole("link", { name: "Esqueci minha senha" }).click();
+  // Navegação no cliente: a página de login (que também tem "E-mail") fica na
+  // tela até a nova rota renderizar. Espera a rota nova antes de preencher.
+  await expect(page.getByRole("heading", { name: "Recuperar senha" })).toBeVisible();
   await page.getByLabel("E-mail").fill(email);
   await page.getByRole("button", { name: "Enviar link" }).click();
   await expect(page.getByText(/Se existir uma conta com esse e-mail/)).toBeVisible();
@@ -86,6 +89,7 @@ test("recuperação de senha pelo e-mail", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Senha redefinida" })).toBeVisible();
 
   await page.getByRole("link", { name: "Entrar" }).click();
+  await expect(page.getByRole("heading", { name: "Entrar" })).toBeVisible();
   await page.getByLabel("E-mail").fill(email);
   await page.getByLabel("Senha").fill("nova-senha-forte-2026");
   await page.getByRole("button", { name: "Entrar" }).click();
