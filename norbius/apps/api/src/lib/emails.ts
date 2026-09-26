@@ -57,3 +57,20 @@ export function passwordChangedEmail(to: string, name: string, supportUrl: strin
     text: `Olá, ${name}. A senha da sua conta NORBIUS foi alterada. Se não foi você, redefina a senha: ${supportUrl}`,
   };
 }
+
+/** Aviso derivado de um insight (título e corpo vêm de templates, sem dados além do necessário). */
+export function notificationEmail(to: string, name: string, title: string, body: string, appUrl: string): Email {
+  const url = `${appUrl}/dashboard`;
+  const prefs = `${appUrl}/configuracoes/notificacoes`;
+  return {
+    to,
+    subject: `NORBIUS: ${title}`,
+    html: layout(
+      title,
+      `${escape(body)}<br><br><span style="font-size:13px;color:#66666D">Valores projetados são estimativas.</span>`,
+      { label: "Abrir o NORBIUS", url },
+      `Você recebe este aviso porque ele está ativo nas suas preferências. Para mudar: ${prefs}`,
+    ),
+    text: `Olá, ${name}.\n\n${title}\n${body}\n\nAbrir o NORBIUS: ${url}\nPreferências de aviso: ${prefs}`,
+  };
+}

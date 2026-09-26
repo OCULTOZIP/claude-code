@@ -1,10 +1,12 @@
-# ADR 0005 — Inteligência financeira (Fase 4, parte 1)
+# ADR 0005 — Inteligência financeira (Fase 4)
 
 Data: 2026-09-26 · Status: aceita
 
 ## Escopo desta parte
 
-Projeção de saldo, "quanto posso gastar?", detectores de insights, estado real do NORBIUS CORE, painel e ferramentas do assistente. **Fica para a parte 2:** notificações (in-app, e-mail, preferências, horário silencioso), execução agendada (06:00 no fuso do usuário e fechamento do mês) e reescrita dos textos pela IA a partir de `evidence`.
+**Parte 1:** projeção de saldo, "quanto posso gastar?", detectores de insights, estado real do NORBIUS CORE, painel e ferramentas do assistente.
+**Parte 2:** notificações (no app e por e-mail), preferências por tipo, horário silencioso e análise diária agendada.
+**Fora desta fase:** reescrita dos textos pela IA a partir de `evidence` (Pro) e push.
 
 ## Decisões técnicas
 
@@ -33,7 +35,14 @@ Projeção de saldo, "quanto posso gastar?", detectores de insights, estado real
 
 7. **Assistente.** `get_cash_projection` (projeção + safe-to-spend, sempre `kind: estimate`, com premissas) e `list_insights`. O prompt aponta para elas; os casos de avaliação de "quanto posso gastar" e "vai sobrar" passaram a esperá-las.
 
+8. **Notificações (parte 2).** Derivam só de insights que **abrem pela primeira vez** (fingerprint inédito): reabrir o mesmo período não avisa de novo. Uma linha por insight e canal (`dedup_key = fingerprint:canal`, único por usuário). Tipos (BLUEPRINT §4.7): `bill_due`, `card_limit`, `goal_reached`, `unusual_spending` (anomalia), `financial_summary` (resumo do mês), `insight` (demais). Padrões: todos no app; e-mail ligado para contas, limite, gastos fora do padrão e resumo; desligado para metas e demais análises. No app sai na hora; e-mail fica `pending` até passar o **horário silencioso (22h–8h no fuso do usuário)**. No envio a preferência é conferida de novo (quem desligou depois recebe `skipped`); falhas tentam de novo com espera crescente, até 5 vezes (`failed`). A aplicação não apaga notificações.
+
+9. **Jobs no processo da API.** `Jobs.tick()` a cada 5 minutos: análise diária de quem já passou das **06:00 locais** e ainda não foi analisado no dia (`intelligence_runs`), o que também cobre o fechamento do mês (o resumo nasce no dia 1º), e envio dos e-mails vencidos. Sem sessão, os jobs descobrem **só ids** por funções `SECURITY DEFINER` (`norbius_intelligence_due`, `norbius_notifications_due`); todo o resto roda por `withUserContext` (RLS). Um tick por vez no processo; com várias instâncias, `JOBS_ENABLED=true` em só uma. A falha na análise de um usuário ainda marca o dia, para não repetir a cada tick.
+
 ## Limitações conhecidas
+
+- Sem `RESEND_API_KEY` os e-mails de aviso vão para o log da API (desenvolvimento).
+- O CORE não passa por `ANALYZING` durante o job diário: a análise de cada usuário leva milissegundos e o estado é recalculado ao abrir o painel.
 
 - Sem receita recorrente cadastrada, a projeção não prevê salário: o usuário vê isso nas premissas e o safe-to-spend vai até o fim do mês.
 - Compras parceladas entram no gasto variável pelo valor total no dia da compra; parcelas futuras já lançadas em faturas também aparecem como fatura — pode haver dupla contagem conservadora no horizonte de 30 dias quando há parcelamentos grandes recentes.

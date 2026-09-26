@@ -24,6 +24,7 @@ import type { BillingService } from "../billing/billing.service";
 import type { CardsService } from "../cards/cards.service";
 import type { DashboardService } from "../dashboard/dashboard.service";
 import type { GoalsService } from "../goals/goals.service";
+import type { NewInsight, NotificationsService } from "../notifications/notifications.service";
 
 const ins = schema.insights;
 const snap = schema.projectionSnapshots;
@@ -66,12 +67,14 @@ export class IntelligenceService {
     private readonly goals: GoalsService,
     private readonly dashboard: DashboardService,
     private readonly billing: BillingService,
+    private readonly notifications: NotificationsService,
   ) {}
 
-  async summary(userId: string): Promise<IntelligenceSummary> {
+  /** `now` só muda nos testes e no job (instante de referência da análise). */
+  async summary(userId: string, now = new Date()): Promise<IntelligenceSummary> {
     const cards = await this.cards.list(userId);
     return withUserContext(this.db, userId, async (tx) => {
-      const data = await this.load(tx, cards);
+      const data = await this.load(tx, cards, now);
       const projection =
         data.hasAccounts && data.historyDays >= MIN_HISTORY_DAYS
           ? project({
@@ -85,7 +88,8 @@ export class IntelligenceService {
             })
           : null;
       const candidates = detectInsights({ ...data.detector, projection }, data.plan);
-      await this.sync(tx, userId, candidates);
+      const opened = await this.sync(tx, userId, candidates, now);
+      await this.notifications.fromInsights(tx, userId, opened, now);
       await this.saveSnapshot(tx, userId, projection);
 
       const open = await this.openInsights(tx);
@@ -183,7 +187,19 @@ export class IntelligenceService {
    * continuam dispensados); os de condição que sumiram viram "resolved" e os de
    * evento vencidos, "expired".
    */
-  private async sync(tx: Transaction, userId: string, candidates: InsightCandidate[]) {
+  private async sync(tx: Transaction, userId: string, candidates: InsightCandidate[], now: Date): Promise<NewInsight[]> {
+    // Só o que nunca existiu gera aviso (reabrir o mesmo fingerprint não notifica de novo).
+    const known = new Set(
+      candidates.length
+        ? (
+            await tx
+              .select({ fingerprint: ins.fingerprint })
+              .from(ins)
+              .where(inArray(ins.fingerprint, candidates.map((c) => c.fingerprint)))
+          ).map((r) => r.fingerprint)
+        : [],
+    );
+    const opened: NewInsight[] = [];
     for (const c of candidates) {
       const values = {
         severity: c.severity,
@@ -194,13 +210,15 @@ export class IntelligenceService {
         periodEnd: c.periodEnd ?? null,
         expiresAt: c.expiresOn ? new Date(`${c.expiresOn}T23:59:59Z`) : null,
       };
-      await tx
+      const [row] = await tx
         .insert(ins)
         .values({ userId, type: c.type, fingerprint: c.fingerprint, ...values })
         .onConflictDoUpdate({
           target: [ins.userId, ins.fingerprint],
           set: { ...values, status: sql`case when ${ins.status} in ('resolved','expired') then 'open' else ${ins.status} end` },
-        });
+        })
+        .returning({ id: ins.id });
+      if (!known.has(c.fingerprint)) opened.push({ id: row!.id, type: c.type, severity: c.severity, title: values.title, body: values.body, fingerprint: c.fingerprint });
     }
     const current = candidates.map((c) => c.fingerprint);
     const events = [...EVENT_INSIGHT_TYPES] as string[];
@@ -217,7 +235,8 @@ export class IntelligenceService {
     await tx
       .update(ins)
       .set({ status: "expired" })
-      .where(and(inArray(ins.status, ["open", "seen"]), lt(ins.expiresAt, new Date())));
+      .where(and(inArray(ins.status, ["open", "seen"]), lt(ins.expiresAt, now)));
+    return opened;
   }
 
   /** Guarda a projeção só quando a entrada mudou; poda o histórico antigo. */
@@ -244,9 +263,9 @@ export class IntelligenceService {
     await tx.insert(coreEv).values({ userId, state, reasons });
   }
 
-  private async load(tx: Transaction, cards: Awaited<ReturnType<CardsService["list"]>>): Promise<Loaded> {
+  private async load(tx: Transaction, cards: Awaited<ReturnType<CardsService["list"]>>, now: Date): Promise<Loaded> {
     const tz = await userTimezone(tx);
-    const today = todayIn(tz);
+    const today = todayIn(tz, now);
     const since = addDays(today, -HISTORY_WINDOW);
     const plan = (await this.billing.entitlementsInTx(tx)).plan;
 

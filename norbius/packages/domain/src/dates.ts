@@ -84,3 +84,35 @@ export function todayIn(timeZone: string, now: Date = new Date()): IsoDate {
     return todayIn("America/Sao_Paulo", now);
   }
 }
+
+/** Data e hora locais (fuso IANA) de um instante. */
+export function localParts(now: Date, timeZone: string): { date: IsoDate; hour: number; minute: number } {
+  const f = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+  const p = Object.fromEntries(f.formatToParts(now).map((x) => [x.type, x.value]));
+  return { date: `${p.year}-${p.month}-${p.day}`, hour: Number(p.hour), minute: Number(p.minute) };
+}
+
+/** Instante UTC correspondente a `date` às `hour`:00 no fuso (usa o deslocamento vigente naquele dia). */
+export function zonedTime(date: IsoDate, hour: number, timeZone: string): Date {
+  const { year, month, day } = parts(date);
+  const guess = new Date(Date.UTC(year, month - 1, day, hour));
+  const seen = localParts(guess, timeZone);
+  const [sy, sm, sd] = seen.date.split("-").map(Number) as [number, number, number];
+  const seenUtc = Date.UTC(sy, sm - 1, sd, seen.hour, seen.minute);
+  return new Date(guess.getTime() - (seenUtc - guess.getTime()));
+}
+
+/** Horário silencioso (22h–8h): quando o aviso pode sair. Fora dele, agora mesmo. */
+export function afterQuietHours(now: Date, timeZone: string, start = 22, end = 8): Date {
+  const { date, hour } = localParts(now, timeZone);
+  if (hour >= end && hour < start) return now;
+  return zonedTime(hour >= start ? addDays(date, 1) : date, end, timeZone);
+}

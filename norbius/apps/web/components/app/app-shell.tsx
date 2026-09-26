@@ -2,6 +2,7 @@ import { Logo } from "@norbius/ui";
 import { Settings } from "lucide-react";
 import Link from "next/link";
 import { NavLinks } from "./nav-links";
+import { NotificationBell } from "./notification-bell";
 import { SignOutButton } from "./sign-out-button";
 import { ToastProvider } from "./toast";
 
@@ -10,10 +11,11 @@ export function AppShell({ name, email, children }: { name: string; email: strin
     <ToastProvider>
     <div className="min-h-dvh lg:grid lg:grid-cols-[248px_1fr]">
       <aside className="hidden border-r border-line bg-surface lg:flex lg:flex-col">
-        <div className="flex h-16 items-center px-6">
+        <div className="flex h-16 items-center justify-between pr-3 pl-6">
           <Link href="/dashboard" aria-label="NORBIUS — painel">
             <Logo />
           </Link>
+          <NotificationBell />
         </div>
         <nav aria-label="Aplicativo" className="flex flex-1 flex-col gap-1 px-3 py-4">
           <NavLinks />
@@ -31,6 +33,7 @@ export function AppShell({ name, email, children }: { name: string; email: strin
             <Logo />
           </Link>
           <div className="flex items-center gap-1">
+            <NotificationBell align="right" />
             <Link
               href="/configuracoes"
               aria-label="Configurações"

@@ -31,6 +31,9 @@ import { CategoriesService } from "./modules/categories/categories.service";
 import { registerDashboardRoutes } from "./modules/dashboard/dashboard.routes";
 import { DashboardService } from "./modules/dashboard/dashboard.service";
 import { registerGoalRoutes } from "./modules/goals/goals.routes";
+import { Jobs } from "./jobs/scheduler";
+import { registerNotificationRoutes } from "./modules/notifications/notifications.routes";
+import { NotificationsService } from "./modules/notifications/notifications.service";
 import { registerIntelligenceRoutes } from "./modules/intelligence/intelligence.routes";
 import { IntelligenceService } from "./modules/intelligence/intelligence.service";
 import { GoalsService } from "./modules/goals/goals.service";
@@ -47,6 +50,12 @@ import { registerMeRoutes } from "./modules/me/me.routes";
 import { MeService } from "./modules/me/me.service";
 import { registerErrorHandling } from "./plugins/errors";
 import { registerSession } from "./plugins/session";
+
+declare module "fastify" {
+  interface FastifyInstance {
+    jobs: Jobs;
+  }
+}
 
 export type AppDeps = {
   env: Env;
@@ -122,10 +131,14 @@ export async function buildApp({ env, db, mailer, log, redis, llm, billingProvid
   registerGoalRoutes(app, goals, requireUser);
   registerOnboardingRoutes(app, new OnboardingService(db, accountsRepo, cards, recurring, goals, audit), requireUser);
   const dashboard = new DashboardService(db, accountsRepo, cardsRepo, cards, goals);
-  const intelligence = new IntelligenceService(db, accountsRepo, cards, goals, dashboard, billing);
+  const notifications = new NotificationsService(db, mailer, env.APP_URL, log);
+  const intelligence = new IntelligenceService(db, accountsRepo, cards, goals, dashboard, billing, notifications);
   dashboard.attachIntelligence(intelligence);
   registerDashboardRoutes(app, dashboard, requireUser);
   registerIntelligenceRoutes(app, intelligence, requireUser);
+  registerNotificationRoutes(app, notifications, requireUser);
+  // Jobs agendados: quem inicia é o server.ts (testes chamam tick() direto).
+  app.decorate("jobs", new Jobs(db, intelligence, notifications, log));
 
   // NORBIUS AI: sem chave configurada o assistente fica indisponível (nunca simulado).
   const memories = new MemoriesService(db);

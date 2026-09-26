@@ -19,8 +19,11 @@ const mailer: Mailer = env.RESEND_API_KEY
 const llm = env.AI_E2E_DOUBLE ? new (await import("./testing/e2e-llm")).E2eLlm() : undefined;
 const app = await buildApp({ env, db, mailer, log, redis, llm });
 
+if (env.JOBS_ENABLED) app.jobs.start();
+
 const shutdown = async (signal: string) => {
   log.info({ signal }, "encerrando");
+  app.jobs.stop();
   await app.close();
   await close();
   redis?.disconnect();

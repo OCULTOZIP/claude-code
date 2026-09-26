@@ -7,3 +7,4 @@ export * from "./me";
 export * from "./onboarding";
 export * from "./billing";
 export * from "./intelligence";
+export * from "./notifications";
