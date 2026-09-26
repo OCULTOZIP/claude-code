@@ -6,11 +6,13 @@ import { PASSWORD_MIN_LENGTH, resetPasswordSchema } from "@norbius/contracts";
 import { Alert, Button, buttonClasses, Field } from "@norbius/ui";
 import Link from "next/link";
 import { useState } from "react";
+import { useHydrated } from "@/lib/use-hydrated";
 
 export function ResetPasswordForm({ token }: { token: string | null }) {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string>();
   const [done, setDone] = useState(false);
+  const hydrated = useHydrated();
   const [loading, setLoading] = useState(false);
 
   if (!token) {
@@ -55,7 +57,7 @@ export function ResetPasswordForm({ token }: { token: string | null }) {
 
   return (
     <AuthCard title="Crie uma nova senha" description="Escolha uma senha que você não usa em outros serviços.">
-      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+      <form method="post" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         {formError ? <Alert tone="error">{formError}</Alert> : null}
         <Field
           label="Nova senha"
@@ -72,7 +74,7 @@ export function ResetPasswordForm({ token }: { token: string | null }) {
           autoComplete="new-password"
           error={errors.confirmPassword}
         />
-        <Button type="submit" loading={loading} className="w-full">
+        <Button type="submit" disabled={!hydrated} loading={loading} className="w-full">
           Salvar nova senha
         </Button>
       </form>

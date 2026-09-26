@@ -9,6 +9,7 @@ import { Alert, Button, Field } from "@norbius/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useHydrated } from "@/lib/use-hydrated";
 
 export function SignInForm({
   next,
@@ -23,6 +24,7 @@ export function SignInForm({
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState(initialError);
   const [notice, setNotice] = useState<string>();
+  const hydrated = useHydrated();
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -67,7 +69,7 @@ export function SignInForm({
           <OrDivider />
         </>
       ) : null}
-      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+      <form method="post" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         <Field label="E-mail" name="email" type="email" autoComplete="email" inputMode="email" error={errors.email} />
         <Field label="Senha" name="password" type="password" autoComplete="current-password" error={errors.password} />
         <div className="-mt-1 flex justify-end">
@@ -75,7 +77,7 @@ export function SignInForm({
             Esqueci minha senha
           </Link>
         </div>
-        <Button type="submit" loading={loading} className="w-full">
+        <Button type="submit" disabled={!hydrated} loading={loading} className="w-full">
           Entrar
         </Button>
       </form>

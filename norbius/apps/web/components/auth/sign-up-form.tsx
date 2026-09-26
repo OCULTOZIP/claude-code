@@ -9,10 +9,12 @@ import { Alert, Button, Field } from "@norbius/ui";
 import { MailCheck } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useHydrated } from "@/lib/use-hydrated";
 
 export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string>();
+  const hydrated = useHydrated();
   const [loading, setLoading] = useState(false);
   const [sentTo, setSentTo] = useState<string>();
 
@@ -68,7 +70,7 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
           <OrDivider />
         </>
       ) : null}
-      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+      <form method="post" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         <Field label="Nome" name="name" autoComplete="name" error={errors.name} />
         <Field label="E-mail" name="email" type="email" autoComplete="email" inputMode="email" error={errors.email} />
         <Field
@@ -101,7 +103,7 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
           </label>
           {errors.acceptTerms ? <p className="text-xs text-primary-light">{errors.acceptTerms}</p> : null}
         </div>
-        <Button type="submit" loading={loading} className="mt-1 w-full">
+        <Button type="submit" disabled={!hydrated} loading={loading} className="mt-1 w-full">
           Criar conta
         </Button>
       </form>

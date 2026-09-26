@@ -4,11 +4,13 @@ import { validate, type FieldErrors } from "@/lib/form";
 import { changePasswordSchema, PASSWORD_MIN_LENGTH } from "@norbius/contracts";
 import { Alert, Button, Card, CardBody, CardHeader, Field } from "@norbius/ui";
 import { useEffect, useState } from "react";
+import { useHydrated } from "@/lib/use-hydrated";
 
 export function ChangePasswordForm() {
   const [hasPassword, setHasPassword] = useState<boolean | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<{ tone: "success" | "error"; text: string }>();
+  const hydrated = useHydrated();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -55,7 +57,7 @@ export function ChangePasswordForm() {
             Sua conta usa o login com Google. Para definir uma senha, use “Esqueci minha senha” na tela de login.
           </Alert>
         ) : (
-          <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+          <form method="post" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
             {status ? <Alert tone={status.tone}>{status.text}</Alert> : null}
             <Field label="Senha atual" name="currentPassword" type="password" autoComplete="current-password" error={errors.currentPassword} />
             <Field
@@ -68,7 +70,7 @@ export function ChangePasswordForm() {
             />
             <Field label="Confirme a nova senha" name="confirmPassword" type="password" autoComplete="new-password" error={errors.confirmPassword} />
             <div>
-              <Button type="submit" loading={loading} disabled={hasPassword === null}>
+              <Button type="submit" loading={loading} disabled={!hydrated || hasPassword === null}>
                 Alterar senha
               </Button>
             </div>

@@ -6,11 +6,13 @@ import { forgotPasswordSchema } from "@norbius/contracts";
 import { Alert, Button, Field } from "@norbius/ui";
 import Link from "next/link";
 import { useState } from "react";
+import { useHydrated } from "@/lib/use-hydrated";
 
 export function ForgotPasswordForm() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string>();
   const [sent, setSent] = useState(false);
+  const hydrated = useHydrated();
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -41,10 +43,10 @@ export function ForgotPasswordForm() {
           Se existir uma conta com esse e-mail, o link chegará em instantes. Ele expira em 30 minutos.
         </Alert>
       ) : (
-        <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+        <form method="post" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
           {formError ? <Alert tone="error">{formError}</Alert> : null}
           <Field label="E-mail" name="email" type="email" autoComplete="email" inputMode="email" error={errors.email} />
-          <Button type="submit" loading={loading} className="w-full">
+          <Button type="submit" disabled={!hydrated} loading={loading} className="w-full">
             Enviar link
           </Button>
         </form>

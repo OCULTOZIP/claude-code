@@ -5,11 +5,13 @@ import { updateProfileSchema, type Me } from "@norbius/contracts";
 import { Alert, Button, Card, CardBody, Field } from "@norbius/ui";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useHydrated } from "@/lib/use-hydrated";
 
 export function ProfileForm({ displayName, email, createdAt }: { displayName: string; email: string; createdAt: string }) {
   const router = useRouter();
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<{ tone: "success" | "error"; text: string }>();
+  const hydrated = useHydrated();
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -35,7 +37,7 @@ export function ProfileForm({ displayName, email, createdAt }: { displayName: st
   return (
     <Card>
       <CardBody className="pt-6">
-        <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+        <form method="post" onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
           {status ? <Alert tone={status.tone}>{status.text}</Alert> : null}
           <Field
             label="Como o NORBIUS deve chamar você"
@@ -50,7 +52,7 @@ export function ProfileForm({ displayName, email, createdAt }: { displayName: st
             Conta criada em {new Date(createdAt).toLocaleDateString("pt-BR", { dateStyle: "long" })}.
           </p>
           <div>
-            <Button type="submit" loading={loading}>
+            <Button type="submit" disabled={!hydrated} loading={loading}>
               Salvar
             </Button>
           </div>
