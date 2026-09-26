@@ -78,6 +78,9 @@ importers:
       '@norbius/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@norbius/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@norbius/ui':
         specifier: workspace:*
         version: link:../../packages/ui

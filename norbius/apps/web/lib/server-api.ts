@@ -1,6 +1,7 @@
 import "server-only";
 import type { AuthConfig, Me } from "@norbius/contracts";
 import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 const API_URL = process.env.API_URL ?? "http://localhost:4000";
 
@@ -22,6 +23,19 @@ async function apiFetch<T>(path: string): Promise<T> {
   });
   if (!res.ok) throw new ApiRequestError(res.status);
   return (await res.json()) as T;
+}
+
+/**
+ * GET autenticado para páginas da área logada. Sessão inválida redireciona
+ * para o login; outros erros sobem para a página de erro.
+ */
+export async function apiGet<T>(path: string): Promise<T> {
+  try {
+    return await apiFetch<T>(path);
+  } catch (err) {
+    if (err instanceof ApiRequestError && err.status === 401) redirect("/entrar");
+    throw err;
+  }
 }
 
 /** Usuário autenticado ou `null` se a sessão for inválida. */

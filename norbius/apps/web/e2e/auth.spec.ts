@@ -41,10 +41,13 @@ test("fluxo completo: cadastro, verificação, painel, perfil, sessões e logout
   await expect(page.getByRole("heading", { name: "E-mail confirmado" })).toBeVisible();
   await page.getByRole("link", { name: "Abrir meu painel" }).click();
 
+  // Primeiro acesso: o painel leva ao onboarding, que pode ser pulado.
+  await expect(page).toHaveURL(/\/onboarding$/);
+  await page.getByRole("button", { name: "Pular configuração" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByRole("heading", { name: "Ana." })).toBeVisible();
   await expect(page.getByRole("img", { name: "NORBIUS CORE: Ativo" })).toBeVisible();
-  await expect(page.getByText("Sem registros").first()).toBeVisible();
+  await expect(page.getByText("Cadastre suas contas para começar.")).toBeVisible();
 
   // Perfil
   await page.getByRole("link", { name: "Configurações" }).first().click();
@@ -93,7 +96,7 @@ test("recuperação de senha pelo e-mail", async ({ page }) => {
   await page.getByLabel("E-mail").fill(email);
   await page.getByLabel("Senha").fill("nova-senha-forte-2026");
   await page.getByRole("button", { name: "Entrar" }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(/\/(dashboard|onboarding)$/);
 });
 
 test("link de redefinição inválido mostra orientação", async ({ page }) => {
@@ -112,5 +115,5 @@ test("não há redirecionamento aberto após login", async ({ page }) => {
   await page.getByLabel("E-mail").fill(email);
   await page.getByLabel("Senha").fill(PASSWORD);
   await page.getByRole("button", { name: "Entrar" }).click();
-  await expect(page).toHaveURL("/dashboard");
+  await expect(page).toHaveURL(/\/(dashboard|onboarding)$/);
 });

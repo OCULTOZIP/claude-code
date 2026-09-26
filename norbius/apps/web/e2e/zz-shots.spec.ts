@@ -1,26 +1,74 @@
 import { expect, test } from "@playwright/test";
-import { latestLink, uniqueEmail } from "./mail";
+import { createAccount, skipOnboarding, verifiedUser } from "./helpers";
 
+// Utilitário de revisão visual: só roda com SHOTS_DIR definido.
 const DIR = process.env.SHOTS_DIR;
 test.skip(!DIR, "somente com SHOTS_DIR");
 
 test("capturas", async ({ page }) => {
-  await page.goto("/");
-  await page.screenshot({ path: `${DIR}/landing.png`, fullPage: true });
-  await page.goto("/entrar");
-  await page.screenshot({ path: `${DIR}/entrar.png` });
-  const email = uniqueEmail("shots");
-  await page.goto("/cadastro");
-  await page.getByLabel("Nome").fill("Ana Souza");
-  await page.getByLabel("E-mail").fill(email);
-  await page.getByLabel("Senha").fill("uma-senha-bem-forte-2026");
-  await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: "Criar conta" }).click();
-  await expect(page.getByRole("heading", { name: "Confirme seu e-mail" })).toBeVisible();
-  await page.goto(await latestLink(email, /Confirme/));
-  await page.goto("/dashboard");
-  await page.screenshot({ path: `${DIR}/dashboard.png`, fullPage: true });
-  await page.goto("/configuracoes/seguranca");
-  await expect(page.getByText("Este dispositivo")).toBeVisible();
-  await page.screenshot({ path: `${DIR}/seguranca.png`, fullPage: true });
+  test.setTimeout(120_000);
+  await verifiedUser(page, "shots");
+  await page.goto("/onboarding");
+  await page.getByLabel("Seu nome").fill("Ana");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await page.getByLabel("Renda média mensal (R$)").fill("6.200");
+  await page.screenshot({ path: `${DIR}/onboarding.png`, fullPage: true });
+  await skipOnboarding(page);
+  await createAccount(page, "Nubank", "8.420,15");
+  await createAccount(page, "Reserva", "12.000");
+
+  const register = async (amount: string, desc: string, cat: string, type = "Despesa") => {
+    await page.goto("/transacoes");
+    await page.getByRole("button", { name: "Registrar" }).first().click();
+    const d = page.getByRole("dialog");
+    await d.getByRole("tab", { name: type }).click();
+    await d.getByLabel("Valor (R$)").fill(amount);
+    await d.getByLabel("Descrição").fill(desc);
+    await d.getByLabel("Categoria").selectOption({ label: cat });
+    await d.getByRole("button", { name: "Registrar", exact: true }).click();
+    await expect(page.getByText(`${type} registrada.`)).toBeVisible();
+  };
+  await register("6.200", "Salário", "Salário", "Receita");
+  await register("412,90", "Supermercado", "Alimentação");
+  await register("89,90", "Uber", "Transporte");
+  await register("1.800", "Aluguel", "Moradia");
+  await register("39,90", "Streaming", "Assinaturas");
+
+  await page.goto("/cartoes");
+  await page.getByRole("button", { name: "Cadastrar cartão" }).click();
+  const d = page.getByRole("dialog");
+  await d.getByLabel("Nome").fill("Roxinho");
+  await d.getByLabel("Limite (R$)").fill("5.000");
+  await d.getByLabel("Dia do fechamento").fill("3");
+  await d.getByLabel("Dia do vencimento").fill("10");
+  await d.getByRole("button", { name: "Cadastrar cartão" }).click();
+  await page.getByRole("button", { name: "Nova compra" }).click();
+  await d.getByLabel("Valor (R$)").fill("2.400");
+  await d.getByLabel("Descrição").fill("Notebook");
+  await d.getByLabel("Categoria").selectOption({ label: "Compras" });
+  await d.getByLabel("Parcelas").selectOption("6");
+  await d.getByRole("button", { name: "Registrar", exact: true }).click();
+  await expect(page.getByText("Compra registrada no cartão.")).toBeVisible();
+
+  await page.goto("/metas");
+  await page.getByRole("button", { name: "Criar meta" }).click();
+  await d.getByLabel("Nome da meta").fill("Viagem para o Chile");
+  await d.getByLabel("Valor objetivo (R$)").fill("8.000");
+  await d.getByRole("button", { name: "Criar meta" }).click();
+  await page.getByRole("button", { name: "Registrar aporte" }).click();
+  await d.getByLabel("Valor (R$)").fill("2.600");
+  await d.getByRole("button", { name: "Registrar aporte" }).click();
+  await expect(page.getByText("Aporte registrado.")).toBeVisible();
+
+  for (const [path, name] of [
+    ["/dashboard", "dashboard"],
+    ["/transacoes", "transacoes"],
+    ["/cartoes", "cartoes"],
+    ["/metas", "metas"],
+    ["/contas", "contas"],
+  ] as const) {
+    await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    await page.screenshot({ path: `${DIR}/${name}.png`, fullPage: true });
+  }
 });

@@ -30,7 +30,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  transpilePackages: ["@norbius/ui", "@norbius/contracts"],
+  transpilePackages: ["@norbius/ui", "@norbius/contracts", "@norbius/domain"],
   // BFF: o navegador fala só com a origem do app; /api/* é repassado à API.
   // Mesma origem => cookies SameSite=Lax, sem CORS.
   async rewrites() {
