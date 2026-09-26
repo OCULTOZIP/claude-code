@@ -24,6 +24,12 @@ const schema = z
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(1),
     /** Só dev/test: grava e-mails como JSON neste diretório (usado pelos testes E2E). */
     MAIL_OUTBOX_DIR: z.string().min(1).optional(),
+    /** NORBIUS AI. Sem chave, o assistente fica indisponível (nunca simulado). */
+    ANTHROPIC_API_KEY: z.string().min(1).optional(),
+    AI_MODEL: z.string().min(1).default("claude-opus-5"),
+    AI_EFFORT: z.enum(["low", "medium", "high", "xhigh", "max"]).optional(),
+    AI_MONTHLY_MESSAGE_LIMIT: z.coerce.number().int().min(0).default(100),
+    AI_MAX_TOOL_ITERATIONS: z.coerce.number().int().min(1).max(12).default(6),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   })
   .superRefine((env, ctx) => {

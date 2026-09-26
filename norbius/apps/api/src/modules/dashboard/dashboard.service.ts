@@ -19,7 +19,7 @@ const COMMITMENT_WINDOW_DAYS = 30;
 
 export class DashboardService {
   constructor(
-    private readonly db: Database,
+    readonly db: Database,
     private readonly accounts: AccountsRepository,
     private readonly cardsRepo: CardsRepository,
     private readonly cards: CardsService,
@@ -52,7 +52,7 @@ export class DashboardService {
         .innerJoin(p, eq(p.id, ct.purchaseId))
         .where(and(isNull(p.deletedAt), gte(ct.competenceDate, start), lte(ct.competenceDate, today)));
 
-      const topCategories = await this.categoryBreakdown(tx, start, today);
+      const topCategories = (await this.categoryBreakdown(tx, start, today)).slice(0, 6);
       const dailyFlow = await this.dailyFlow(tx, start, end, today);
       const recent = await this.recent(tx);
       const commitments = await this.commitments(tx, today);
@@ -103,7 +103,8 @@ export class DashboardService {
     });
   }
 
-  private async categoryBreakdown(tx: Transaction, start: string, today: string) {
+  /** Despesas por categoria no intervalo (contas + parcelas de cartão por competência). */
+  async categoryBreakdown(tx: Transaction, start: string, today: string) {
     const rows = await tx.execute<{ category_id: string; name: string; cents: string }>(sql`
       select c.id as category_id, c.name, sum(x.cents)::bigint as cents from (
         select ${q(t.categoryId)} as category_id, ${q(t.amountCents)} as cents from ${t}
@@ -115,7 +116,7 @@ export class DashboardService {
       group by c.id, c.name order by cents desc`);
     const list = [...rows].map((row) => ({ categoryId: row.category_id, name: row.name, cents: Number(row.cents) }));
     const total = list.reduce((s, x) => s + x.cents, 0);
-    return list.slice(0, 6).map((x) => ({ ...x, share: total ? x.cents / total : 0 }));
+    return list.map((x) => ({ ...x, share: total ? x.cents / total : 0 }));
   }
 
   private async dailyFlow(tx: Transaction, start: string, end: string, today: string) {
@@ -180,9 +181,9 @@ export class DashboardService {
       .map(({ createdAt: _c, ...rest }) => rest);
   }
 
-  /** Compromissos dos próximos 30 dias: recorrências pendentes, faturas em aberto e lançamentos futuros. */
-  private async commitments(tx: Transaction, today: string): Promise<Commitment[]> {
-    const until = addDays(today, COMMITMENT_WINDOW_DAYS);
+  /** Compromissos futuros: recorrências pendentes, faturas em aberto e lançamentos futuros. */
+  async commitments(tx: Transaction, today: string, days = COMMITMENT_WINDOW_DAYS, limit = 12): Promise<Commitment[]> {
+    const until = addDays(today, days);
     const out: Commitment[] = [];
 
     const recs = await tx.select().from(r).where(eq(r.active, true));
@@ -238,6 +239,6 @@ export class DashboardService {
       });
     }
 
-    return out.sort((a, b) => compareDates(a.date, b.date)).slice(0, 12);
+    return out.sort((a, b) => compareDates(a.date, b.date)).slice(0, limit);
   }
 }

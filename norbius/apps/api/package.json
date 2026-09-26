@@ -11,19 +11,20 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
     "@fastify/helmet": "^13.1.1",
     "@fastify/rate-limit": "^11.2.0",
     "@node-rs/argon2": "^2.2.1",
     "@norbius/contracts": "workspace:*",
     "@norbius/db": "workspace:*",
+    "@norbius/domain": "workspace:*",
     "@norbius/observability": "workspace:*",
     "better-auth": "^1.7.6",
     "drizzle-orm": "^0.45.3",
     "fastify": "^5.12.5",
     "ioredis": "^5.6.0",
     "resend": "^6.30.0",
-    "zod": "^4.6.5",
-    "@norbius/domain": "workspace:*"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

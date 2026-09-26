@@ -29,6 +29,27 @@
       "when": 1790398148945,
       "tag": "0003_finance_grants_seed",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790400326653,
+      "tag": "0004_ai",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790400327416,
+      "tag": "0005_ai_grants",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790400564131,
+      "tag": "0006_ai_cards",
+      "breakpoints": true
     }
   ]
 }

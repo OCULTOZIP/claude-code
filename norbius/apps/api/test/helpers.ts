@@ -4,10 +4,11 @@ import type { FastifyInstance, InjectOptions } from "fastify";
 import { buildApp } from "../src/app";
 import { loadEnv } from "../src/env";
 import { MemoryMailer } from "../src/lib/mailer";
+import type { LlmClient } from "../src/modules/ai/llm";
 
 export const APP_URL = "http://localhost:3000";
 
-export async function createTestApp(overrides: Record<string, string> = {}) {
+export async function createTestApp(overrides: Record<string, string> = {}, deps: { llm?: LlmClient | null } = {}) {
   const env = loadEnv({
     APP_ENV: "test",
     APP_URL,
@@ -25,6 +26,7 @@ export async function createTestApp(overrides: Record<string, string> = {}) {
     mailer,
     log: createLogger({ service: "api-test", level: "silent" }),
     redis: null,
+    llm: deps.llm ?? null,
   });
   await app.ready();
   return {

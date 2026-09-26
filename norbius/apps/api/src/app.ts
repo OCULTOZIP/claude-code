@@ -8,6 +8,10 @@ import type { Env } from "./env";
 import { AuditLogger } from "./lib/audit";
 import { createAuth } from "./lib/auth";
 import type { Mailer } from "./lib/mailer";
+import { registerAiRoutes } from "./modules/ai/ai.routes";
+import { AnthropicLlm, type LlmClient } from "./modules/ai/llm";
+import { MemoriesService } from "./modules/ai/memories.service";
+import { AiOrchestrator } from "./modules/ai/orchestrator";
 import { AccountsRepository } from "./modules/accounts/accounts.repository";
 import { registerAccountRoutes } from "./modules/accounts/accounts.routes";
 import { AccountsService } from "./modules/accounts/accounts.service";
@@ -35,9 +39,9 @@ import { MeService } from "./modules/me/me.service";
 import { registerErrorHandling } from "./plugins/errors";
 import { registerSession } from "./plugins/session";
 
-export type AppDeps = { env: Env; db: Database; mailer: Mailer; log: Logger; redis: Redis | null };
+export type AppDeps = { env: Env; db: Database; mailer: Mailer; log: Logger; redis: Redis | null; llm?: LlmClient | null };
 
-export async function buildApp({ env, db, mailer, log, redis }: AppDeps) {
+export async function buildApp({ env, db, mailer, log, redis, llm }: AppDeps) {
   const app = Fastify({
     loggerInstance: log as FastifyBaseLogger,
     // Confia apenas nos N proxies imediatos (proxy do web / load balancer).
@@ -79,14 +83,29 @@ export async function buildApp({ env, db, mailer, log, redis }: AppDeps) {
   const cards = new CardsService(db, cardsRepo, accountsRepo, transactionsRepo, audit);
   const goals = new GoalsService(db, audit);
   const recurring = new RecurringService(db, accountsRepo, cardsRepo, transactions, cards, audit);
-  registerAccountRoutes(app, new AccountsService(db, accountsRepo, audit), requireUser);
-  registerCategoryRoutes(app, new CategoriesService(db), requireUser);
+  const accountsService = new AccountsService(db, accountsRepo, audit);
+  const categories = new CategoriesService(db);
+  registerAccountRoutes(app, accountsService, requireUser);
+  registerCategoryRoutes(app, categories, requireUser);
   registerTransactionRoutes(app, transactions, requireUser);
   registerCardRoutes(app, cards, requireUser);
   registerRecurringRoutes(app, recurring, requireUser);
   registerGoalRoutes(app, goals, requireUser);
   registerOnboardingRoutes(app, new OnboardingService(db, accountsRepo, cards, recurring, goals, audit), requireUser);
-  registerDashboardRoutes(app, new DashboardService(db, accountsRepo, cardsRepo, cards, goals), requireUser);
+  const dashboard = new DashboardService(db, accountsRepo, cardsRepo, cards, goals);
+  registerDashboardRoutes(app, dashboard, requireUser);
+
+  // NORBIUS AI: sem chave configurada o assistente fica indisponível (nunca simulado).
+  const memories = new MemoriesService(db);
+  const llmClient = llm !== undefined ? llm : env.ANTHROPIC_API_KEY ? new AnthropicLlm(env) : null;
+  const ai = new AiOrchestrator(
+    db,
+    llmClient,
+    { accounts: accountsService, categories, transactions, cards, goals, recurring, dashboard, memories, audit },
+    env,
+    log,
+  );
+  registerAiRoutes(app, ai, memories, requireUser, llmClient?.model ?? env.AI_MODEL);
 
   return app;
 }
