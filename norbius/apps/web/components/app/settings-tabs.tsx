@@ -9,6 +9,7 @@ export function SettingsTabs() {
         { href: "/configuracoes/plano", label: "Plano" },
         { href: "/configuracoes/seguranca", label: "Segurança" },
         { href: "/configuracoes/notificacoes", label: "Avisos" },
+        { href: "/configuracoes/suporte", label: "Suporte" },
         { href: "/configuracoes/categorias", label: "Categorias" },
         { href: "/configuracoes/memorias", label: "Memórias do NORBIUS" },
       ]}

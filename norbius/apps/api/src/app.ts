@@ -34,6 +34,11 @@ import { registerGoalRoutes } from "./modules/goals/goals.routes";
 import { Jobs } from "./jobs/scheduler";
 import { registerReportRoutes } from "./modules/reports/reports.routes";
 import { ReportsService } from "./modules/reports/reports.service";
+import { registerAdminRoutes } from "./modules/admin/admin.routes";
+import { AdminService } from "./modules/admin/admin.service";
+import { loadKey } from "./modules/admin/crypto";
+import { registerSupportRoutes } from "./modules/support/support.routes";
+import { passwordHasher } from "./lib/password";
 import { registerNotificationRoutes } from "./modules/notifications/notifications.routes";
 import { NotificationsService } from "./modules/notifications/notifications.service";
 import { registerIntelligenceRoutes } from "./modules/intelligence/intelligence.routes";
@@ -67,9 +72,11 @@ export type AppDeps = {
   redis: Redis | null;
   llm?: LlmClient | null;
   billingProvider?: BillingProvider | null;
+  /** Conexão com o papel norbius_admin (painel admin). */
+  adminDb?: Database | null;
 };
 
-export async function buildApp({ env, db, mailer, log, redis, llm, billingProvider }: AppDeps) {
+export async function buildApp({ env, db, mailer, log, redis, llm, billingProvider, adminDb }: AppDeps) {
   const app = Fastify({
     loggerInstance: log as FastifyBaseLogger,
     // Confia apenas nos N proxies imediatos (proxy do web / load balancer).
@@ -139,6 +146,15 @@ export async function buildApp({ env, db, mailer, log, redis, llm, billingProvid
   registerDashboardRoutes(app, dashboard, requireUser);
   registerIntelligenceRoutes(app, intelligence, requireUser);
   registerNotificationRoutes(app, notifications, requireUser);
+  registerSupportRoutes(app, db, audit, requireUser);
+  // Painel admin: só com a conexão do papel restrito e a chave de cifra.
+  if (adminDb && env.ADMIN_ENCRYPTION_KEY) {
+    registerAdminRoutes(app, new AdminService(adminDb, loadKey(env.ADMIN_ENCRYPTION_KEY), passwordHasher), {
+      adminUrl: env.ADMIN_URL,
+      secureCookie: env.ADMIN_URL.startsWith("https://"),
+      rateLimit: env.AUTH_RATE_LIMIT_ENABLED,
+    });
+  }
   registerReportRoutes(app, new ReportsService(db, accountsRepo, cardsRepo, goals, dashboard, billing), requireUser);
   // Jobs agendados: quem inicia é o server.ts (testes chamam tick() direto).
   app.decorate("jobs", new Jobs(db, intelligence, notifications, log));

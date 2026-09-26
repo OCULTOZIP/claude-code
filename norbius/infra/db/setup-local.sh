@@ -17,10 +17,16 @@ DO \$\$ BEGIN
   ELSE
     ALTER ROLE norbius_app LOGIN PASSWORD 'norbius_app';
   END IF;
+  -- Painel admin (Fase 7): papel próprio, sem acesso a dados financeiros (ADR 0007).
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'norbius_admin') THEN
+    CREATE ROLE norbius_admin LOGIN PASSWORD 'norbius_admin';
+  ELSE
+    ALTER ROLE norbius_admin LOGIN PASSWORD 'norbius_admin';
+  END IF;
 END \$\$;
 SQL
 
 if ! $PSQL "$ADMIN_URL" -tAc "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1; then
   $PSQL "$ADMIN_URL" -v ON_ERROR_STOP=1 -c "CREATE DATABASE $DB_NAME OWNER norbius_owner"
 fi
-echo "Banco '$DB_NAME' pronto (owner: norbius_owner, app: norbius_app)."
+echo "Banco '$DB_NAME' pronto (owner: norbius_owner, app: norbius_app, admin: norbius_admin)."

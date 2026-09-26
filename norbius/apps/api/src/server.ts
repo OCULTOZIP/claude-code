@@ -8,6 +8,7 @@ import { ConsoleMailer, FileMailer, ResendMailer, type Mailer } from "./lib/mail
 const env = loadEnv();
 const log = createLogger({ service: "api", level: env.LOG_LEVEL });
 const { db, close } = createDatabase(env.DATABASE_URL);
+const admin = env.DATABASE_ADMIN_URL ? createDatabase(env.DATABASE_ADMIN_URL, { max: 3 }) : null;
 const redis = env.REDIS_URL ? new Redis(env.REDIS_URL, { maxRetriesPerRequest: 2, lazyConnect: false }) : null;
 const mailer: Mailer = env.RESEND_API_KEY
   ? new ResendMailer(env.RESEND_API_KEY, env.EMAIL_FROM)
@@ -17,7 +18,7 @@ const mailer: Mailer = env.RESEND_API_KEY
 
 // Dublê do LLM só existe em E2E (APP_ENV=test, validado em loadEnv).
 const llm = env.AI_E2E_DOUBLE ? new (await import("./testing/e2e-llm")).E2eLlm() : undefined;
-const app = await buildApp({ env, db, mailer, log, redis, llm });
+const app = await buildApp({ env, db, mailer, log, redis, llm, adminDb: admin?.db ?? null });
 
 if (env.JOBS_ENABLED) app.jobs.start();
 
@@ -26,6 +27,7 @@ const shutdown = async (signal: string) => {
   app.jobs.stop();
   await app.close();
   await close();
+  await admin?.close();
   redis?.disconnect();
   process.exit(0);
 };

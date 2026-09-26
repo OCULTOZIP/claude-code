@@ -38,6 +38,7 @@ export const subscriptions = pgTable(
     check("subscriptions_cycle_check", sql`${t.cycle} is null or ${t.cycle} in ('monthly','yearly')`),
     check("subscriptions_provider_check", sql`${t.provider} is null or ${t.provider} in ('asaas','fake')`),
     owner("subscriptions"),
+    pgPolicy("subscriptions_admin_read", { for: "select", to: "norbius_admin", using: sql`true` }),
   ],
 ).enableRLS();
 
@@ -67,6 +68,7 @@ export const billingPayments = pgTable(
     check("billing_payments_amount_check", sql`${t.amountCents} >= 0`),
     check("billing_payments_status_check", sql`${t.status} in ('pending','paid','overdue','refunded','canceled')`),
     owner("billing_payments"),
+    pgPolicy("billing_payments_admin_read", { for: "select", to: "norbius_admin", using: sql`true` }),
   ],
 ).enableRLS();
 

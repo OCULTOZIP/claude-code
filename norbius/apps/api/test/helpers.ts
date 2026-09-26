@@ -23,6 +23,7 @@ export async function createTestApp(
     ...overrides,
   });
   const database = createDatabase(env.DATABASE_URL, { max: 5 });
+  const adminDatabase = env.DATABASE_ADMIN_URL ? createDatabase(env.DATABASE_ADMIN_URL, { max: 3 }) : null;
   const mailer = new MemoryMailer();
   const app = await buildApp({
     env,
@@ -32,6 +33,7 @@ export async function createTestApp(
     redis: null,
     llm: deps.llm ?? null,
     billingProvider: deps.billingProvider ?? null,
+    adminDb: adminDatabase?.db ?? null,
   });
   await app.ready();
   return {
@@ -40,6 +42,7 @@ export async function createTestApp(
     close: async () => {
       await app.close();
       await database.close();
+      await adminDatabase?.close();
     },
   };
 }

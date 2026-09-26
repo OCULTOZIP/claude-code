@@ -14,6 +14,11 @@ const schema = z
     PORT: z.coerce.number().int().positive().default(4000),
     APP_URL: z.url(),
     DATABASE_URL: z.url(),
+    /** Painel admin (ADR 0007): papel norbius_admin, sem acesso a dados financeiros. Sem ele, o módulo admin não existe. */
+    DATABASE_ADMIN_URL: z.url().optional(),
+    ADMIN_URL: z.url().default("http://localhost:3001"),
+    /** 32 bytes em base64 (openssl rand -base64 32): cifra os segredos TOTP dos admins. */
+    ADMIN_ENCRYPTION_KEY: z.string().min(40).optional(),
     REDIS_URL: z.url().optional(),
     BETTER_AUTH_SECRET: z.string().min(32, "BETTER_AUTH_SECRET precisa ter pelo menos 32 caracteres"),
     GOOGLE_CLIENT_ID: z.string().min(1).optional(),
@@ -52,6 +57,9 @@ const schema = z
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   })
   .superRefine((env, ctx) => {
+    if (env.DATABASE_ADMIN_URL && !env.ADMIN_ENCRYPTION_KEY) {
+      ctx.addIssue({ code: "custom", message: "ADMIN_ENCRYPTION_KEY é obrigatória com DATABASE_ADMIN_URL (openssl rand -base64 32)." });
+    }
     if (Boolean(env.GOOGLE_CLIENT_ID) !== Boolean(env.GOOGLE_CLIENT_SECRET)) {
       ctx.addIssue({ code: "custom", message: "Defina GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET juntos." });
     }

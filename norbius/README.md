@@ -2,9 +2,9 @@
 
 > Seu dinheiro. Uma inteligência trabalhando por você.
 
-Sistema de inteligência financeira pessoal (SaaS, pt-BR). Arquitetura completa em [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md). Decisões: [fundação](docs/adr/0001-fundacao.md) · [núcleo financeiro](docs/adr/0002-nucleo-financeiro.md) · [NORBIUS AI](docs/adr/0003-norbius-ai.md) · [assinaturas](docs/adr/0004-assinaturas.md) · [inteligência financeira](docs/adr/0005-inteligencia-financeira.md) · [experiência premium](docs/adr/0006-experiencia-premium.md).
+Sistema de inteligência financeira pessoal (SaaS, pt-BR). Arquitetura completa em [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md). Decisões: [fundação](docs/adr/0001-fundacao.md) · [núcleo financeiro](docs/adr/0002-nucleo-financeiro.md) · [NORBIUS AI](docs/adr/0003-norbius-ai.md) · [assinaturas](docs/adr/0004-assinaturas.md) · [inteligência financeira](docs/adr/0005-inteligencia-financeira.md) · [experiência premium](docs/adr/0006-experiencia-premium.md) · [painel admin](docs/adr/0007-painel-admin.md).
 
-**Status:** Fase 5 (experiência premium) concluída. A Fase 6 foi antecipada a pedido do dono do produto; a Fase 7 (admin) ainda não foi iniciada.
+**Status:** Fase 7 (painel admin) concluída. Próxima: Fase 8 (produção).
 
 | Fase | Entregue |
 |---|---|
@@ -14,6 +14,7 @@ Sistema de inteligência financeira pessoal (SaaS, pt-BR). Arquitetura completa 
 | 4 · Inteligência | Projeção de saldo p10/p50/p90 com premissas, "quanto posso gastar" até a próxima receita, 11 detectores de insights com evidência, estado real do NORBIUS CORE, alertas no painel e no assistente; avisos no app e por e-mail com preferências e horário silencioso; análise diária às 06:00 locais |
 | 5 · Experiência premium | Relatório mensal em PDF (Pro), app instalável (PWA) com página offline, NORBIUS CORE animado pelo estado real, acessibilidade 100 no Lighthouse, telas mais leves (zod sob demanda) |
 | 6 · SaaS | Planos Grátis/Pro (R$ 14,90/mês ou R$ 149/ano), teste de 7 dias sem cartão, assinatura via Asaas (Pix, boleto, cartão), webhook idempotente, limites por plano, cancelamento, histórico de cobranças |
+| 7 · Admin | Painel separado (`apps/admin`) com login + TOTP obrigatório, papéis (suporte, cobrança, analista, superadmin), métricas, clientes, pagamentos, atividade; papel de banco `norbius_admin` sem acesso a dados financeiros (provado por teste); acesso excepcional autorizado pelo usuário, auditado e avisado |
 
 ## Estrutura
 
@@ -21,6 +22,7 @@ Sistema de inteligência financeira pessoal (SaaS, pt-BR). Arquitetura completa 
 apps/
   api/      Fastify — /api/auth/* (Better Auth) e /api/v1/*
   web/      Next.js 16 — marketing, autenticação e área logada (BFF: /api/* → API)
+  admin/    Next.js 16 — painel administrativo (porta 3001; só /api/admin/* → API)
 packages/
   domain/         regras puras: dinheiro pt-BR, datas, parcelas, faturas, recorrências
   intelligence/   regras puras da Fase 4: projeção, safe-to-spend, detectores, estado do CORE
@@ -40,7 +42,8 @@ pnpm install
 cp .env.example .env            # gere BETTER_AUTH_SECRET: openssl rand -base64 48
 POSTGRES_ADMIN_URL=postgres://postgres:postgres@localhost:5432/postgres pnpm db:setup
 DATABASE_MIGRATION_URL=postgres://norbius_owner:norbius_owner@localhost:5432/norbius pnpm db:migrate
-pnpm dev                        # web em :3000, API em :4000
+pnpm dev                        # web em :3000, admin em :3001, API em :4000
+pnpm --filter @norbius/api admin:create   # primeiro admin (pede senha e mostra o QR do autenticador)
 ```
 
 Sem `RESEND_API_KEY`, os e-mails (verificação, redefinição de senha, avisos) aparecem no log da API. A análise diária e o envio de avisos rodam dentro da API (`JOBS_ENABLED`, padrão `true`; com várias instâncias, ligue em só uma).

@@ -5,3 +5,4 @@ export * from "./ai";
 export * from "./billing";
 export * from "./intelligence";
 export * from "./notifications";
+export * from "./admin";
