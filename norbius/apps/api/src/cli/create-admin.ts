@@ -11,18 +11,38 @@ import { newTotpSecret, otpauthUri, verifyTotp } from "../modules/admin/totp";
 
 const ROLES = ["support", "billing", "analyst", "superadmin"] as const;
 
+// Um único leitor para todas as perguntas (abrir um por pergunta perde o que já foi digitado).
+const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: process.stdin.isTTY === true });
+let muted = false;
+const out = rl as unknown as { _writeToOutput: (s: string) => void };
+const write = out._writeToOutput.bind(rl);
+out._writeToOutput = (s: string) => {
+  if (!muted) write(s);
+};
+
+// Linhas chegam numa fila: funciona digitando ou com entrada colada/encadeada.
+const lines: string[] = [];
+let waiting: ((line: string) => void) | null = null;
+rl.on("line", (line) => {
+  if (waiting) {
+    const w = waiting;
+    waiting = null;
+    w(line);
+  } else lines.push(line);
+});
+rl.on("close", () => waiting?.(""));
+
 function ask(question: string, hidden = false): Promise<string> {
-  return new Promise((resolve) => {
-    const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: true });
-    if (hidden) {
-      const write = (rl as unknown as { _writeToOutput: (s: string) => void })._writeToOutput.bind(rl);
-      (rl as unknown as { _writeToOutput: (s: string) => void })._writeToOutput = (s: string) => write(s.startsWith(question) ? s : "");
-    }
-    rl.question(question, (answer) => {
-      rl.close();
+  process.stdout.write(question);
+  muted = hidden;
+  return new Promise<string>((resolve) => {
+    const done = (answer: string) => {
       if (hidden) process.stdout.write("\n");
+      muted = false;
       resolve(answer.trim());
-    });
+    };
+    if (lines.length) done(lines.shift()!);
+    else waiting = done;
   });
 }
 
@@ -47,9 +67,10 @@ async function main() {
   console.log(`\nSe preferir digitar, use a chave: ${secret.match(/.{1,4}/g)!.join(" ")}\n`);
   let ok = false;
   for (let attempt = 0; attempt < 3 && !ok; attempt++) {
-    const code = await ask("Digite o código de 6 dígitos que apareceu no app: ");
-    ok = verifyTotp(secret, code, 0) !== null;
-    if (!ok) console.log("Código não confere. Confira se o relógio do celular está certo e tente de novo.");
+    // Aceita "123 456" (o app mostra separado) e tolera o relógio do celular até ±1 min.
+    const code = (await ask("Digite o código de 6 dígitos que aparece AGORA no app: ")).replace(/\D/g, "");
+    ok = [-60_000, -30_000, 0, 30_000, 60_000].some((d) => verifyTotp(secret, code, 0, Date.now() + d) !== null);
+    if (!ok) console.log("Código não confere. Use o código da conta \"NORBIUS Admin\" que acabou de ser adicionada (o mais novo) e digite antes de ele trocar.");
   }
   if (!ok) throw new Error("Não foi possível confirmar o autenticador. Nada foi criado.");
 
@@ -67,9 +88,11 @@ async function main() {
     await close();
   }
   console.log(`\nAdministrador ${email} (${role}) criado. Entre no painel com e-mail, senha e o código do app.\n`);
+  rl.close();
 }
 
 main().catch((err) => {
+  rl.close();
   console.error(`\nErro: ${err instanceof Error ? err.message : String(err)}\n`);
   process.exit(1);
 });
