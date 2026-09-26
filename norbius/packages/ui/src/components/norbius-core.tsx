@@ -33,9 +33,15 @@ export function NorbiusCore({
       aria-label={`NORBIUS CORE: ${meta.label}`}
     >
       <span className={cn("absolute inset-[18%] rounded-full blur-2xl animate-core-pulse", meta.glow)} />
+      {state === "ATTENTION" ? (
+        <span aria-hidden className="absolute inset-[4%] rounded-full border border-primary shadow-[0_0_28px_rgba(229,9,20,0.45)] animate-core-alert" />
+      ) : null}
       <svg viewBox="0 0 100 100" className="absolute inset-0 size-full">
         <circle cx="50" cy="50" r="46" fill="none" className="stroke-line-strong" strokeWidth="0.75" />
-        <circle cx="50" cy="50" r="38" fill="none" className="stroke-line" strokeWidth="0.75" strokeDasharray="1 3" />
+      </svg>
+      {/* Anel pontilhado: gira devagar enquanto há oportunidades sendo otimizadas. */}
+      <svg viewBox="0 0 100 100" className={cn("absolute inset-0 size-full", state === "OPTIMIZING" && "animate-core-drift")}>
+        <circle cx="50" cy="50" r="38" fill="none" className={state === "OPTIMIZING" ? "stroke-warning/60" : "stroke-line"} strokeWidth="0.75" strokeDasharray="1 3" />
       </svg>
       <svg
         viewBox="0 0 100 100"
@@ -54,7 +60,13 @@ export function NorbiusCore({
         />
       </svg>
       <span className="relative grid size-[34%] place-items-center rounded-full border border-line-strong bg-surface">
-        <span className={cn("size-[34%] rounded-full shadow-[0_0_24px_currentColor]", meta.dot)} />
+        <span
+          className={cn(
+            "size-[34%] rounded-full shadow-[0_0_24px_currentColor]",
+            meta.dot,
+            (state === "STABLE" || state === "ACTIVE") && "animate-core-breathe",
+          )}
+        />
       </span>
     </div>
   );

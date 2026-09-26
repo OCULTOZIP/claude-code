@@ -56,7 +56,7 @@ export function CardsView({ cards, data }: { cards: CreditCardView[]; data: Tran
                     <span className="text-fg-secondary">Limite disponível</span>
                     <span className="font-medium tabular">{brl(c.availableLimitCents)}</span>
                   </div>
-                  <Progress value={usage} tone={usage >= 0.9 ? "primary" : "fg"} className="mt-2" />
+                  <Progress value={usage} label={`Limite usado do cartão ${c.name}`} tone={usage >= 0.9 ? "primary" : "fg"} className="mt-2" />
                   <p className="mt-1.5 text-xs text-fg-muted tabular">
                     {brl(c.usedLimitCents)} usados de {brl(c.limitCents)} (inclui parcelas futuras)
                   </p>

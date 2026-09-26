@@ -2,9 +2,9 @@
 
 > Seu dinheiro. Uma inteligência trabalhando por você.
 
-Sistema de inteligência financeira pessoal (SaaS, pt-BR). Arquitetura completa em [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md). Decisões: [fundação](docs/adr/0001-fundacao.md) · [núcleo financeiro](docs/adr/0002-nucleo-financeiro.md) · [NORBIUS AI](docs/adr/0003-norbius-ai.md) · [assinaturas](docs/adr/0004-assinaturas.md) · [inteligência financeira](docs/adr/0005-inteligencia-financeira.md).
+Sistema de inteligência financeira pessoal (SaaS, pt-BR). Arquitetura completa em [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md). Decisões: [fundação](docs/adr/0001-fundacao.md) · [núcleo financeiro](docs/adr/0002-nucleo-financeiro.md) · [NORBIUS AI](docs/adr/0003-norbius-ai.md) · [assinaturas](docs/adr/0004-assinaturas.md) · [inteligência financeira](docs/adr/0005-inteligencia-financeira.md) · [experiência premium](docs/adr/0006-experiencia-premium.md).
 
-**Status:** Fase 4 (inteligência financeira) concluída. A Fase 6 foi antecipada a pedido do dono do produto; as Fases 5 (experiência premium) e 7 (admin) ainda não foram iniciadas.
+**Status:** Fase 5 (experiência premium) concluída. A Fase 6 foi antecipada a pedido do dono do produto; a Fase 7 (admin) ainda não foi iniciada.
 
 | Fase | Entregue |
 |---|---|
@@ -12,6 +12,7 @@ Sistema de inteligência financeira pessoal (SaaS, pt-BR). Arquitetura completa 
 | 2 · Financial Core | Onboarding conversacional, contas, transações, transferências, categorias, contas fixas/recorrências, cartões (parcelas, faturas, pagamento), metas, painel com dados reais, exportação CSV |
 | 3 · NORBIUS AI | Assistente conversacional (Claude) com streaming: consultas com dados reais, registro por linguagem natural com Desfazer, ações sensíveis com confirmação, memórias explícitas, cota mensal, avaliação; modo voz (ditado, respostas faladas, ligação com voz neural local opcional) |
 | 4 · Inteligência | Projeção de saldo p10/p50/p90 com premissas, "quanto posso gastar" até a próxima receita, 11 detectores de insights com evidência, estado real do NORBIUS CORE, alertas no painel e no assistente; avisos no app e por e-mail com preferências e horário silencioso; análise diária às 06:00 locais |
+| 5 · Experiência premium | Relatório mensal em PDF (Pro), app instalável (PWA) com página offline, NORBIUS CORE animado pelo estado real, acessibilidade 100 no Lighthouse, telas mais leves (zod sob demanda) |
 | 6 · SaaS | Planos Grátis/Pro (R$ 14,90/mês ou R$ 149/ano), teste de 7 dias sem cartão, assinatura via Asaas (Pix, boleto, cartão), webhook idempotente, limites por plano, cancelamento, histórico de cobranças |
 
 ## Estrutura

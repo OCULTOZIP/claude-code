@@ -25,6 +25,8 @@ export function coreState(args: {
   historyDays: number;
   insights: CoreInsight[];
   projection: Projection | null;
+  /** Projeção é recurso Pro: sem ela visível, o CORE não cita o saldo estimado. */
+  projectionVisible?: boolean;
 }): CoreStateResult {
   const { insights, historyDays } = args;
   if (args.analyzing) return { state: "ANALYZING", reason: "Analisando suas finanças…", reasons: [] };
@@ -56,7 +58,7 @@ export function coreState(args: {
   }
   return {
     state: "STABLE",
-    reason: `Nenhum alerta. Saldo estimado no fim do período: ${formatBRL(p.endP50)}.`,
+    reason: args.projectionVisible === false ? "Nenhum alerta no momento." : `Nenhum alerta. Saldo estimado no fim do período: ${formatBRL(p.endP50)}.`,
     reasons: [],
   };
 }

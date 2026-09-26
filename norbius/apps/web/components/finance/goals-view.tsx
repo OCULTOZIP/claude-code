@@ -99,7 +99,7 @@ function GoalCard({ goal: g, onContribute, onEdit }: { goal: GoalView; onContrib
           <span className="text-2xl font-semibold tabular">{brl(g.currentAmountCents)}</span>
           <span className="text-sm text-fg-secondary tabular">{Math.round(g.progress * 100)}%</span>
         </div>
-        <Progress value={g.progress} tone={g.status === "completed" ? "success" : "primary"} className="mt-2" />
+        <Progress value={g.progress} label={`Progresso da meta ${g.name}`} tone={g.status === "completed" ? "success" : "primary"} className="mt-2" />
         <p className="mt-1.5 text-xs text-fg-muted tabular">
           de {brl(g.targetAmountCents)}
           {g.monthlyNeededCents ? ` · cerca de ${brl(g.monthlyNeededCents)}/mês para chegar no prazo (estimativa)` : ""}

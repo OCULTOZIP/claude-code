@@ -2,7 +2,6 @@
 import { AuthCard } from "@/components/auth/auth-card";
 import { authClient, authErrorMessage } from "@/lib/auth-client";
 import { validate, type FieldErrors } from "@/lib/form";
-import { forgotPasswordSchema } from "@norbius/contracts";
 import { Alert, Button, Field } from "@norbius/ui";
 import Link from "next/link";
 import { useState } from "react";
@@ -18,7 +17,10 @@ export function ForgotPasswordForm() {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFormError(undefined);
-    const parsed = validate(forgotPasswordSchema, { email: new FormData(e.currentTarget).get("email") });
+    const email = new FormData(e.currentTarget).get("email");
+    // Zod só carrega no envio: deixa a página leve (Lighthouse).
+    const { forgotPasswordSchema } = await import("@norbius/contracts");
+    const parsed = validate(forgotPasswordSchema, { email });
     if (!parsed.ok) return setErrors(parsed.errors);
     setErrors({});
     setLoading(true);

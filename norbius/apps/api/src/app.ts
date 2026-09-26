@@ -32,6 +32,8 @@ import { registerDashboardRoutes } from "./modules/dashboard/dashboard.routes";
 import { DashboardService } from "./modules/dashboard/dashboard.service";
 import { registerGoalRoutes } from "./modules/goals/goals.routes";
 import { Jobs } from "./jobs/scheduler";
+import { registerReportRoutes } from "./modules/reports/reports.routes";
+import { ReportsService } from "./modules/reports/reports.service";
 import { registerNotificationRoutes } from "./modules/notifications/notifications.routes";
 import { NotificationsService } from "./modules/notifications/notifications.service";
 import { registerIntelligenceRoutes } from "./modules/intelligence/intelligence.routes";
@@ -137,6 +139,7 @@ export async function buildApp({ env, db, mailer, log, redis, llm, billingProvid
   registerDashboardRoutes(app, dashboard, requireUser);
   registerIntelligenceRoutes(app, intelligence, requireUser);
   registerNotificationRoutes(app, notifications, requireUser);
+  registerReportRoutes(app, new ReportsService(db, accountsRepo, cardsRepo, goals, dashboard, billing), requireUser);
   // Jobs agendados: quem inicia é o server.ts (testes chamam tick() direto).
   app.decorate("jobs", new Jobs(db, intelligence, notifications, log));
 

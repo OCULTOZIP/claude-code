@@ -4,7 +4,7 @@ import { OrDivider } from "@/components/auth/divider";
 import { GoogleButton } from "@/components/auth/google-button";
 import { authClient, authErrorMessage } from "@/lib/auth-client";
 import { validate, type FieldErrors } from "@/lib/form";
-import { PASSWORD_MIN_LENGTH, signUpSchema } from "@norbius/contracts";
+import { PASSWORD_MIN_LENGTH } from "@norbius/contracts/auth-rules";
 import { Alert, Button, Field } from "@norbius/ui";
 import { MailCheck } from "lucide-react";
 import Link from "next/link";
@@ -22,6 +22,8 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
     e.preventDefault();
     setFormError(undefined);
     const form = new FormData(e.currentTarget);
+    // Zod só carrega no envio: deixa a página leve (Lighthouse).
+    const { signUpSchema } = await import("@norbius/contracts");
     const parsed = validate(signUpSchema, {
       name: form.get("name"),
       email: form.get("email"),

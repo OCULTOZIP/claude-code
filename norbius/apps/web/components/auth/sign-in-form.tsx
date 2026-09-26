@@ -4,7 +4,6 @@ import { OrDivider } from "@/components/auth/divider";
 import { GoogleButton } from "@/components/auth/google-button";
 import { authClient, authErrorMessage } from "@/lib/auth-client";
 import { validate, type FieldErrors } from "@/lib/form";
-import { signInSchema } from "@norbius/contracts";
 import { Alert, Button, Field } from "@norbius/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,6 +31,8 @@ export function SignInForm({
     setFormError(undefined);
     setNotice(undefined);
     const form = new FormData(e.currentTarget);
+    // Zod só carrega no envio: deixa a página leve (Lighthouse).
+    const { signInSchema } = await import("@norbius/contracts");
     const parsed = validate(signInSchema, { email: form.get("email"), password: form.get("password") });
     if (!parsed.ok) return setErrors(parsed.errors);
     setErrors({});

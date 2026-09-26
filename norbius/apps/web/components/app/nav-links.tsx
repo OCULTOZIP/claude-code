@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@norbius/ui";
-import { ArrowLeftRight, CreditCard, LayoutGrid, Landmark, Settings, Sparkles, Target } from "lucide-react";
+import { ArrowLeftRight, CreditCard, FileText, LayoutGrid, Landmark, Settings, Sparkles, Target } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/contas", label: "Contas", icon: Landmark, mobile: false },
   { href: "/cartoes", label: "Cartões", icon: CreditCard, mobile: true },
   { href: "/metas", label: "Metas", icon: Target, mobile: true },
+  { href: "/relatorios", label: "Relatórios", icon: FileText, mobile: false },
   { href: "/configuracoes", label: "Configurações", icon: Settings, mobile: false },
 ];
 

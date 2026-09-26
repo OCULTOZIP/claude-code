@@ -98,19 +98,23 @@ export class IntelligenceService {
         historyDays: data.historyDays,
         insights: open.map((i) => ({ id: i.id, type: i.type as InsightType, severity: i.severity, title: i.title })),
         projection,
+        projectionVisible: data.plan === "pro",
       });
       await this.recordCore(tx, userId, core.state, core.reasons);
 
+      // Projeção e safe-to-spend são Pro (BLUEPRINT §14.1); no Grátis a projeção
+      // só alimenta os alertas (ex.: conta a vencer sem saldo previsto).
+      const visible = data.plan === "pro" ? projection : null;
       const sts =
-        data.hasAccounts && data.historyDays >= MIN_HISTORY_DAYS
+        visible
           ? safeToSpend({
               today: data.today,
               balanceCents: data.detector.balanceCents,
               events: data.events,
               goalsMonthlyCents: data.goalsMonthlyCents,
               avgMonthlyIncomeCents: data.detector.avgMonthlyIncomeCents,
-              dailyVariableCents: projection?.dailyVariableCents ?? 0,
-              confidence: projection?.confidence ?? "low",
+              dailyVariableCents: visible.dailyVariableCents,
+              confidence: visible.confidence,
             })
           : null;
 
@@ -120,23 +124,26 @@ export class IntelligenceService {
         minHistoryDays: MIN_HISTORY_DAYS,
         core,
         insights: open,
-        projection: projection
+        projection: visible
           ? {
               kind: "estimate",
-              confidence: projection.confidence,
-              horizonEnd: projection.horizonEnd,
-              days: projection.days,
-              lowest: projection.lowestP50,
-              endCents: projection.endP50,
-              dailyVariableCents: projection.dailyVariableCents,
-              assumptions: projection.assumptions,
+              confidence: visible.confidence,
+              horizonEnd: visible.horizonEnd,
+              days: visible.days,
+              lowest: visible.lowestP50,
+              endCents: visible.endP50,
+              dailyVariableCents: visible.dailyVariableCents,
+              assumptions: visible.assumptions,
             }
           : null,
-        projectionUnavailable: projection
+        projectionUnavailable: visible
           ? null
           : !data.hasAccounts
             ? "Cadastre suas contas para o NORBIUS projetar o saldo."
-            : `Preciso de pelo menos ${MIN_HISTORY_DAYS} dias de registros para projetar o saldo (hoje: ${data.historyDays}).`,
+            : data.plan !== "pro"
+              ? "A projeção de saldo e o \"quanto posso gastar\" fazem parte do Pro."
+              : `Preciso de pelo menos ${MIN_HISTORY_DAYS} dias de registros para projetar o saldo (hoje: ${data.historyDays}).`,
+        projectionLocked: data.plan !== "pro",
         safeToSpend: sts
           ? {
               kind: "estimate",

@@ -57,21 +57,23 @@ export function FlowChart({ days, today }: { days: Day[]; today: string }) {
         </div>
       ) : (
         <div className="relative mt-4">
-          <div className="flex h-40 items-end gap-[2px]" role="img" aria-label="Receitas e despesas por dia do mês">
+          {/* Um único alvo para ponteiro (barras finas demais para toque); teclado e leitor de tela usam a tabela. */}
+          <div
+            className="flex h-40 touch-none items-end gap-[2px]"
+            role="img"
+            aria-label={`Receitas e despesas por dia do mês. Use "Ver tabela" para os valores de cada dia.`}
+            onPointerMove={(e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              const i = Math.floor(((e.clientX - r.left) / r.width) * days.length);
+              const d = days[Math.max(0, Math.min(days.length - 1, i))]!;
+              setActive(d.date > today ? null : Math.max(0, Math.min(days.length - 1, i)));
+            }}
+            onPointerLeave={() => setActive(null)}
+          >
             {days.map((d, i) => {
               const future = d.date > today;
               return (
-                <button
-                  key={d.date}
-                  type="button"
-                  tabIndex={future ? -1 : 0}
-                  aria-label={`${shortDate(d.date)}: receitas ${brl(d.incomeCents)}, despesas ${brl(d.expenseCents)}`}
-                  onPointerEnter={() => setActive(i)}
-                  onPointerLeave={() => setActive(null)}
-                  onFocus={() => setActive(i)}
-                  onBlur={() => setActive(null)}
-                  className="flex h-full min-w-0 flex-1 items-end justify-center gap-[2px] rounded-sm outline-offset-0 hover:bg-fg/[0.03]"
-                >
+                <span key={d.date} className="flex h-full min-w-0 flex-1 items-end justify-center gap-[2px] rounded-sm">
                   {future ? (
                     <span className="h-px w-full bg-line" />
                   ) : (
@@ -86,7 +88,7 @@ export function FlowChart({ days, today }: { days: Day[]; today: string }) {
                       />
                     </>
                   )}
-                </button>
+                </span>
               );
             })}
           </div>

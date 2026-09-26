@@ -7,7 +7,7 @@ import { brl, monthLabel, relativeDay, shortDate, signedBrl } from "@/lib/format
 import { firstName, greeting } from "@/lib/greeting";
 import { apiGet, getMe } from "@/lib/server-api";
 import type { DashboardSummary } from "@norbius/contracts";
-import { Badge, buttonClasses, Card, CardBody, CardHeader, CardTitle, cn, NorbiusCore, Progress } from "@norbius/ui";
+import { Badge, buttonClasses, Card, CardBody, CardHeader, CardTitle, cn, coreStateLabel, NorbiusCore, Progress } from "@norbius/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -81,8 +81,13 @@ export default async function DashboardPage() {
           <div className="pointer-events-none absolute -top-24 left-1/2 size-64 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
           <div className="relative flex flex-col items-center px-6 py-7 text-center">
             <NorbiusCore state={s.core.state} size={132} />
-            <p className="mt-5 font-mono text-xs tracking-[0.3em]">{s.core.state}</p>
+            <p className="mt-5 font-mono text-xs tracking-[0.3em] uppercase">{coreStateLabel(s.core.state)}</p>
             <p className="mt-2 text-sm leading-relaxed text-fg-secondary">{s.core.reason}</p>
+            {intel.core.reasons.length ? (
+              <a href="#alertas" className="mt-2 text-xs text-fg-muted underline-offset-4 hover:text-fg hover:underline">
+                Ver {intel.core.reasons.length === 1 ? "o alerta" : `os ${intel.core.reasons.length} alertas`}
+              </a>
+            ) : null}
             {sts ? (
               <div className="mt-5 w-full rounded-xl border border-line bg-secondary/40 px-4 py-3 text-left">
                 <p className="text-xs text-fg-muted">Quanto posso gastar · estimativa</p>
@@ -121,6 +126,7 @@ export default async function DashboardPage() {
       <Card>
         <CardHeader>
           <CardTitle>Fluxo financeiro · {monthLabel(s.month)}</CardTitle>
+          <SectionLink href="/relatorios">Relatórios</SectionLink>
         </CardHeader>
         <CardBody>
           <FlowChart days={s.dailyFlow} today={s.today} />
@@ -136,11 +142,18 @@ export default async function DashboardPage() {
             {intel.projection ? (
               <ProjectionChart projection={intel.projection} today={s.today} balanceCents={s.availableBalance.cents} />
             ) : (
-              <p className="text-sm text-fg-muted">{intel.projectionUnavailable}</p>
+              <div className="flex flex-col items-start gap-3">
+                <p className="text-sm text-fg-muted">{intel.projectionUnavailable}</p>
+                {intel.projectionLocked && intel.projectionUnavailable?.includes("Pro") ? (
+                  <Link href="/configuracoes/plano" className={buttonClasses({ variant: "secondary", size: "sm" })}>
+                    Conhecer o Pro
+                  </Link>
+                ) : null}
+              </div>
             )}
           </CardBody>
         </Card>
-        <Card>
+        <Card id="alertas" className="scroll-mt-6">
           <CardHeader>
             <CardTitle>Alertas{intel.insights.length ? ` · ${intel.insights.length}` : ""}</CardTitle>
           </CardHeader>
@@ -195,7 +208,7 @@ export default async function DashboardPage() {
                       <span className="truncate text-fg-secondary">{c.name}</span>
                       <span className="tabular">{brl(c.cents)}</span>
                     </div>
-                    <Progress value={c.share} className="mt-1.5" />
+                    <Progress value={c.share} label={`${c.name}: parte das despesas do mês`} className="mt-1.5" />
                   </li>
                 ))}
               </ul>
@@ -219,7 +232,7 @@ export default async function DashboardPage() {
                       <span className="truncate">{g.name}</span>
                       <span className="text-fg-secondary tabular">{Math.round(g.progress * 100)}%</span>
                     </div>
-                    <Progress value={g.progress} tone="primary" className="mt-1.5" />
+                    <Progress value={g.progress} label={`Progresso da meta ${g.name}`} tone="primary" className="mt-1.5" />
                     <p className="mt-1 text-xs text-fg-muted tabular">
                       {brl(g.currentAmountCents)} de {brl(g.targetAmountCents)}
                     </p>
@@ -278,7 +291,7 @@ export default async function DashboardPage() {
                         <span className="truncate">{c.name}</span>
                         {usage >= 0.8 ? <Badge tone="warning">{Math.round(usage * 100)}% do limite</Badge> : null}
                       </div>
-                      <Progress value={usage} className="mt-1.5" />
+                      <Progress value={usage} label={`Limite usado do cartão ${c.name}`} className="mt-1.5" />
                       <p className="mt-1 text-xs text-fg-muted tabular">
                         {brl(c.usedLimitCents)} usados de {brl(c.limitCents)}
                       </p>

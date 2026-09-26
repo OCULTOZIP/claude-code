@@ -5,7 +5,7 @@ export type LegalSection = { title: string; body: React.ReactNode };
 export function LegalPage({ title, updatedAt, sections }: { title: string; updatedAt: string; sections: LegalSection[] }) {
   return (
     <article className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
-      <p className="font-mono text-xs tracking-[0.24em] text-primary uppercase">Legal</p>
+      <p className="font-mono text-xs tracking-[0.24em] text-primary-light uppercase">Legal</p>
       <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
       <p className="mt-3 text-sm text-fg-muted">Versão {updatedAt}</p>
       <Alert tone="warning" className="mt-8">

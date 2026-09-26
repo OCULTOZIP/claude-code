@@ -2,7 +2,7 @@
 import { AuthCard } from "@/components/auth/auth-card";
 import { authClient, authErrorMessage } from "@/lib/auth-client";
 import { validate, type FieldErrors } from "@/lib/form";
-import { PASSWORD_MIN_LENGTH, resetPasswordSchema } from "@norbius/contracts";
+import { PASSWORD_MIN_LENGTH } from "@norbius/contracts/auth-rules";
 import { Alert, Button, buttonClasses, Field } from "@norbius/ui";
 import Link from "next/link";
 import { useState } from "react";
@@ -42,6 +42,8 @@ export function ResetPasswordForm({ token }: { token: string | null }) {
     e.preventDefault();
     setFormError(undefined);
     const form = new FormData(e.currentTarget);
+    // Zod só carrega no envio: deixa a página leve (Lighthouse).
+    const { resetPasswordSchema } = await import("@norbius/contracts");
     const parsed = validate(resetPasswordSchema, {
       password: form.get("password"),
       confirmPassword: form.get("confirmPassword"),

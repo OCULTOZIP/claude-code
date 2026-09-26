@@ -65,6 +65,20 @@ describe("plano Grátis", () => {
     expect(s.core).toMatchObject({ state: "ATTENTION", reason: "Roxinho: 96% do limite usado." });
     expect(s.core.reasons[0]!.insightId).toBe(s.insights[0]!.id);
   });
+
+  it("não mostra projeção nem quanto pode gastar (recursos Pro), mesmo com histórico", async () => {
+    const { client } = await verifiedClient(ctx, "intel-free2");
+    const { food } = await categories(client);
+    const acc = await account(client, 300_000);
+    for (let i = 1; i <= 20; i++) {
+      await client.post("/api/v1/transactions", { type: "expense", accountId: acc, amountCents: 2_000, categoryId: food, description: "Mercado", date: addDays(today, -i) });
+    }
+    const s = await intel(client);
+    expect(s.historyDays).toBe(21);
+    expect(s).toMatchObject({ projection: null, safeToSpend: null, projectionLocked: true });
+    expect(s.projectionUnavailable).toContain("Pro");
+    expect(s.core).toMatchObject({ state: "STABLE", reason: "Nenhum alerta no momento." });
+  });
 });
 
 describe("plano Pro com histórico", () => {

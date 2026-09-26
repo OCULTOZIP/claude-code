@@ -23,5 +23,6 @@ export const config = {
     "/cartoes/:path*",
     "/metas/:path*",
     "/configuracoes/:path*",
+    "/relatorios/:path*",
   ],
 };

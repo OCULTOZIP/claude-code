@@ -45,5 +45,7 @@ export type IntelligenceSummary = {
   projection: ProjectionView | null;
   /** Por que a projeção não está disponível (histórico curto, sem contas). */
   projectionUnavailable: string | null;
+  /** Projeção e safe-to-spend são do Pro: true no plano Grátis. */
+  projectionLocked: boolean;
   safeToSpend: SafeToSpendView | null;
 };

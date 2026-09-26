@@ -95,7 +95,7 @@ export default function LandingPage() {
         <ol className="grid gap-4 md:grid-cols-3">
           {STEPS.map((s) => (
             <li key={s.n} className="rounded-card border border-line bg-card p-6">
-              <span className="font-mono text-sm text-primary">{s.n}</span>
+              <span className="font-mono text-sm text-primary-light">{s.n}</span>
               <h3 className="mt-3 font-semibold">{s.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-fg-secondary">{s.description}</p>
             </li>
