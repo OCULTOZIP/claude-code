@@ -69,6 +69,12 @@ jobs:
         env:
           CI: "true"
 
+      - name: Contexto das falhas do E2E
+        if: failure()
+        run: |
+          find apps/web/test-results -name error-context.md -print0 2>/dev/null \
+            | xargs -0 -r -I{} sh -c 'echo "::group::{}"; cat "{}"; echo "::endgroup::"'
+
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
